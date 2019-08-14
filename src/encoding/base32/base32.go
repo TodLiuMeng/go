@@ -21,7 +21,7 @@ import (
 // introduced for SASL GSSAPI and standardized in RFC 4648.
 // The alternate "base32hex" encoding is used in DNSSEC.
 type Encoding struct {
-	encode    string
+	encode    [32]byte
 	decodeMap [256]byte
 	padChar   rune
 }
@@ -37,8 +37,12 @@ const encodeHex = "0123456789ABCDEFGHIJKLMNOPQRSTUV"
 // NewEncoding returns a new Encoding defined by the given alphabet,
 // which must be a 32-byte string.
 func NewEncoding(encoder string) *Encoding {
+	if len(encoder) != 32 {
+		panic("encoding alphabet is not 32-bytes long")
+	}
+
 	e := new(Encoding)
-	e.encode = encoder
+	copy(e.encode[:], encoder)
 	e.padChar = StdPadding
 
 	for i := 0; i < len(e.decodeMap); i++ {
@@ -129,17 +133,17 @@ func (enc *Encoding) Encode(dst, src []byte) {
 		size := len(dst)
 		if size >= 8 {
 			// Common case, unrolled for extra performance
-			dst[0] = enc.encode[b[0]]
-			dst[1] = enc.encode[b[1]]
-			dst[2] = enc.encode[b[2]]
-			dst[3] = enc.encode[b[3]]
-			dst[4] = enc.encode[b[4]]
-			dst[5] = enc.encode[b[5]]
-			dst[6] = enc.encode[b[6]]
-			dst[7] = enc.encode[b[7]]
+			dst[0] = enc.encode[b[0]&31]
+			dst[1] = enc.encode[b[1]&31]
+			dst[2] = enc.encode[b[2]&31]
+			dst[3] = enc.encode[b[3]&31]
+			dst[4] = enc.encode[b[4]&31]
+			dst[5] = enc.encode[b[5]&31]
+			dst[6] = enc.encode[b[6]&31]
+			dst[7] = enc.encode[b[7]&31]
 		} else {
 			for i := 0; i < size; i++ {
-				dst[i] = enc.encode[b[i]]
+				dst[i] = enc.encode[b[i]&31]
 			}
 		}
 
@@ -280,7 +284,12 @@ func (e CorruptInputError) Error() string {
 // additional data is an error. This method assumes that src has been
 // stripped of all supported whitespace ('\r' and '\n').
 func (enc *Encoding) decode(dst, src []byte) (n int, end bool, err error) {
+	// Lift the nil check outside of the loop.
+	_ = enc.decodeMap
+
+	dsti := 0
 	olen := len(src)
+
 	for len(src) > 0 && !end {
 		// Decode quantum using the base32 alphabet
 		var dbuf [8]byte
@@ -288,17 +297,15 @@ func (enc *Encoding) decode(dst, src []byte) (n int, end bool, err error) {
 
 		for j := 0; j < 8; {
 
-			// We have reached the end and are missing padding
-			if len(src) == 0 && enc.padChar != NoPadding {
-				return n, false, CorruptInputError(olen - len(src) - j)
-			}
-
-			// We have reached the end and are not expecing any padding
-			if len(src) == 0 && enc.padChar == NoPadding {
+			if len(src) == 0 {
+				if enc.padChar != NoPadding {
+					// We have reached the end and are missing padding
+					return n, false, CorruptInputError(olen - len(src) - j)
+				}
+				// We have reached the end and are not expecing any padding
 				dlen, end = j, true
 				break
 			}
-
 			in := src[0]
 			src = src[1:]
 			if in == byte(enc.padChar) && j >= 2 && len(src) < 8 {
@@ -335,37 +342,26 @@ func (enc *Encoding) decode(dst, src []byte) (n int, end bool, err error) {
 		// quantum
 		switch dlen {
 		case 8:
-			dst[4] = dbuf[6]<<5 | dbuf[7]
+			dst[dsti+4] = dbuf[6]<<5 | dbuf[7]
+			n++
 			fallthrough
 		case 7:
-			dst[3] = dbuf[4]<<7 | dbuf[5]<<2 | dbuf[6]>>3
+			dst[dsti+3] = dbuf[4]<<7 | dbuf[5]<<2 | dbuf[6]>>3
+			n++
 			fallthrough
 		case 5:
-			dst[2] = dbuf[3]<<4 | dbuf[4]>>1
+			dst[dsti+2] = dbuf[3]<<4 | dbuf[4]>>1
+			n++
 			fallthrough
 		case 4:
-			dst[1] = dbuf[1]<<6 | dbuf[2]<<1 | dbuf[3]>>4
+			dst[dsti+1] = dbuf[1]<<6 | dbuf[2]<<1 | dbuf[3]>>4
+			n++
 			fallthrough
 		case 2:
-			dst[0] = dbuf[0]<<3 | dbuf[1]>>2
+			dst[dsti+0] = dbuf[0]<<3 | dbuf[1]>>2
+			n++
 		}
-
-		if !end {
-			dst = dst[5:]
-		}
-
-		switch dlen {
-		case 2:
-			n += 1
-		case 4:
-			n += 2
-		case 5:
-			n += 3
-		case 7:
-			n += 4
-		case 8:
-			n += 5
-		}
+		dsti += 5
 	}
 	return n, end, nil
 }

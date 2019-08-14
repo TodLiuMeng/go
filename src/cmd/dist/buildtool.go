@@ -73,6 +73,7 @@ var bootstrapDirs = []string{
 	"cmd/link/internal/loadelf",
 	"cmd/link/internal/loadmacho",
 	"cmd/link/internal/loadpe",
+	"cmd/link/internal/loadxcoff",
 	"cmd/link/internal/mips",
 	"cmd/link/internal/mips64",
 	"cmd/link/internal/objfile",
@@ -80,12 +81,17 @@ var bootstrapDirs = []string{
 	"cmd/link/internal/s390x",
 	"cmd/link/internal/sym",
 	"cmd/link/internal/x86",
+	"compress/flate",
+	"compress/zlib",
 	"cmd/link/internal/wasm",
 	"container/heap",
 	"debug/dwarf",
 	"debug/elf",
 	"debug/macho",
 	"debug/pe",
+	"internal/goversion",
+	"internal/race",
+	"internal/xcoff",
 	"math/big",
 	"math/bits",
 	"sort",
@@ -123,10 +129,12 @@ func bootstrapBuildTools() {
 	// but it is easier to debug on failure if the files are in a known location.
 	workspace := pathf("%s/pkg/bootstrap", goroot)
 	xremoveall(workspace)
+	xatexit(func() { xremoveall(workspace) })
 	base := pathf("%s/src/bootstrap", workspace)
 	xmkdirall(base)
 
 	// Copy source code into $GOROOT/pkg/bootstrap and rewrite import paths.
+	writefile("module bootstrap\n", pathf("%s/%s", base, "go.mod"), 0)
 	for _, dir := range bootstrapDirs {
 		src := pathf("%s/src/%s", goroot, dir)
 		dst := pathf("%s/%s", base, dir)
@@ -200,7 +208,7 @@ func bootstrapBuildTools() {
 		cmd = append(cmd, "-toolexec="+tool)
 	}
 	cmd = append(cmd, "bootstrap/cmd/...")
-	run(workspace, ShowOutput|CheckExit, cmd...)
+	run(base, ShowOutput|CheckExit, cmd...)
 
 	// Copy binaries into tool binary directory.
 	for _, name := range bootstrapDirs {
@@ -240,6 +248,7 @@ func isUnneededSSARewriteFile(srcFile string) (archCaps string, unneeded bool) {
 	}
 	archCaps = fileArch
 	fileArch = strings.ToLower(fileArch)
+	fileArch = strings.TrimSuffix(fileArch, "splitload")
 	if fileArch == strings.TrimSuffix(runtime.GOARCH, "le") {
 		return "", false
 	}

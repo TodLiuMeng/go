@@ -7,9 +7,11 @@ package runtime_test
 import (
 	"bytes"
 	"fmt"
+	"os"
 	"reflect"
 	"regexp"
 	. "runtime"
+	"strconv"
 	"strings"
 	"sync"
 	"sync/atomic"
@@ -76,6 +78,10 @@ func TestStackMem(t *testing.T) {
 
 // Test stack growing in different contexts.
 func TestStackGrowth(t *testing.T) {
+	if *flagQuick {
+		t.Skip("-quick")
+	}
+
 	if GOARCH == "wasm" {
 		t.Skip("fails on wasm (too slow?)")
 	}
@@ -126,9 +132,18 @@ func TestStackGrowth(t *testing.T) {
 		}()
 		<-done
 		GC()
+
+		timeout := 20 * time.Second
+		if s := os.Getenv("GO_TEST_TIMEOUT_SCALE"); s != "" {
+			scale, err := strconv.Atoi(s)
+			if err == nil {
+				timeout *= time.Duration(scale)
+			}
+		}
+
 		select {
 		case <-done:
-		case <-time.After(20 * time.Second):
+		case <-time.After(timeout):
 			if atomic.LoadUint32(&started) == 0 {
 				t.Log("finalizer did not start")
 			} else {
@@ -584,6 +599,9 @@ func (s structWithMethod) callers() []uintptr {
 	return pc[:Callers(0, pc)]
 }
 
+// The noinline prevents this function from being inlined
+// into a wrapper. TODO: remove this when issue 28640 is fixed.
+//go:noinline
 func (s structWithMethod) stack() string {
 	buf := make([]byte, 4<<10)
 	return string(buf[:Stack(buf, false)])
@@ -773,3 +791,66 @@ func TestTracebackAncestors(t *testing.T) {
 		}
 	}
 }
+
+// Test that defer closure is correctly scanned when the stack is scanned.
+func TestDeferLiveness(t *testing.T) {
+	output := runTestProg(t, "testprog", "DeferLiveness", "GODEBUG=clobberfree=1")
+	if output != "" {
+		t.Errorf("output:\n%s\n\nwant no output", output)
+	}
+}
+
+func TestDeferHeapAndStack(t *testing.T) {
+	P := 4     // processors
+	N := 10000 //iterations
+	D := 200   // stack depth
+
+	if testing.Short() {
+		P /= 2
+		N /= 10
+		D /= 10
+	}
+	c := make(chan bool)
+	for p := 0; p < P; p++ {
+		go func() {
+			for i := 0; i < N; i++ {
+				if deferHeapAndStack(D) != 2*D {
+					panic("bad result")
+				}
+			}
+			c <- true
+		}()
+	}
+	for p := 0; p < P; p++ {
+		<-c
+	}
+}
+
+// deferHeapAndStack(n) computes 2*n
+func deferHeapAndStack(n int) (r int) {
+	if n == 0 {
+		return 0
+	}
+	if n%2 == 0 {
+		// heap-allocated defers
+		for i := 0; i < 2; i++ {
+			defer func() {
+				r++
+			}()
+		}
+	} else {
+		// stack-allocated defers
+		defer func() {
+			r++
+		}()
+		defer func() {
+			r++
+		}()
+	}
+	r = deferHeapAndStack(n - 1)
+	escapeMe(new([1024]byte)) // force some GCs
+	return
+}
+
+// Pass a value to escapeMe to force it to escape.
+var escapeMe = func(x interface{}) {}

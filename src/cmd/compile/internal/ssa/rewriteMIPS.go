@@ -3,11 +3,13 @@
 
 package ssa
 
+import "fmt"
 import "math"
 import "cmd/internal/obj"
 import "cmd/internal/objabi"
 import "cmd/compile/internal/types"
 
+var _ = fmt.Println   // in case not otherwise used
 var _ = math.MinInt8  // in case not otherwise used
 var _ = obj.ANOP      // in case not otherwise used
 var _ = objabi.GOROOT // in case not otherwise used
@@ -213,6 +215,8 @@ func rewriteValueMIPS(v *Value) bool {
 		return rewriteValueMIPS_OpLess8U_0(v)
 	case OpLoad:
 		return rewriteValueMIPS_OpLoad_0(v)
+	case OpLocalAddr:
+		return rewriteValueMIPS_OpLocalAddr_0(v)
 	case OpLsh16x16:
 		return rewriteValueMIPS_OpLsh16x16_0(v)
 	case OpLsh16x32:
@@ -401,6 +405,18 @@ func rewriteValueMIPS(v *Value) bool {
 		return rewriteValueMIPS_OpOr8_0(v)
 	case OpOrB:
 		return rewriteValueMIPS_OpOrB_0(v)
+	case OpPanicBounds:
+		return rewriteValueMIPS_OpPanicBounds_0(v)
+	case OpPanicExtend:
+		return rewriteValueMIPS_OpPanicExtend_0(v)
+	case OpRotateLeft16:
+		return rewriteValueMIPS_OpRotateLeft16_0(v)
+	case OpRotateLeft32:
+		return rewriteValueMIPS_OpRotateLeft32_0(v)
+	case OpRotateLeft64:
+		return rewriteValueMIPS_OpRotateLeft64_0(v)
+	case OpRotateLeft8:
+		return rewriteValueMIPS_OpRotateLeft8_0(v)
 	case OpRound32F:
 		return rewriteValueMIPS_OpRound32F_0(v)
 	case OpRound64F:
@@ -519,9 +535,8 @@ func rewriteValueMIPS_OpAdd16_0(v *Value) bool {
 	// cond:
 	// result: (ADD x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSADD)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -533,9 +548,8 @@ func rewriteValueMIPS_OpAdd32_0(v *Value) bool {
 	// cond:
 	// result: (ADD x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSADD)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -547,9 +561,8 @@ func rewriteValueMIPS_OpAdd32F_0(v *Value) bool {
 	// cond:
 	// result: (ADDF x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSADDF)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -558,16 +571,14 @@ func rewriteValueMIPS_OpAdd32F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpAdd32withcarry_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Add32withcarry <t> x y c)
 	// cond:
 	// result: (ADD c (ADD <t> x y))
 	for {
 		t := v.Type
-		_ = v.Args[2]
+		c := v.Args[2]
 		x := v.Args[0]
 		y := v.Args[1]
-		c := v.Args[2]
 		v.reset(OpMIPSADD)
 		v.AddArg(c)
 		v0 := b.NewValue0(v.Pos, OpMIPSADD, t)
@@ -582,9 +593,8 @@ func rewriteValueMIPS_OpAdd64F_0(v *Value) bool {
 	// cond:
 	// result: (ADDD x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSADDD)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -596,9 +606,8 @@ func rewriteValueMIPS_OpAdd8_0(v *Value) bool {
 	// cond:
 	// result: (ADD x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSADD)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -610,9 +619,8 @@ func rewriteValueMIPS_OpAddPtr_0(v *Value) bool {
 	// cond:
 	// result: (ADD x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSADD)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -637,9 +645,8 @@ func rewriteValueMIPS_OpAnd16_0(v *Value) bool {
 	// cond:
 	// result: (AND x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSAND)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -651,9 +658,8 @@ func rewriteValueMIPS_OpAnd32_0(v *Value) bool {
 	// cond:
 	// result: (AND x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSAND)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -665,9 +671,8 @@ func rewriteValueMIPS_OpAnd8_0(v *Value) bool {
 	// cond:
 	// result: (AND x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSAND)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -679,9 +684,8 @@ func rewriteValueMIPS_OpAndB_0(v *Value) bool {
 	// cond:
 	// result: (AND x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSAND)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -693,10 +697,9 @@ func rewriteValueMIPS_OpAtomicAdd32_0(v *Value) bool {
 	// cond:
 	// result: (LoweredAtomicAdd ptr val mem)
 	for {
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		v.reset(OpMIPSLoweredAtomicAdd)
 		v.AddArg(ptr)
 		v.AddArg(val)
@@ -706,19 +709,15 @@ func rewriteValueMIPS_OpAtomicAdd32_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpAtomicAnd8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	config := b.Func.Config
-	_ = config
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (AtomicAnd8 ptr val mem)
 	// cond: !config.BigEndian
 	// result: (LoweredAtomicAnd (AND <typ.UInt32Ptr> (MOVWconst [^3]) ptr) (OR <typ.UInt32> (SLL <typ.UInt32> (ZeroExt8to32 val) (SLLconst <typ.UInt32> [3] (ANDconst <typ.UInt32> [3] ptr))) (NORconst [0] <typ.UInt32> (SLL <typ.UInt32> (MOVWconst [0xff]) (SLLconst <typ.UInt32> [3] (ANDconst <typ.UInt32> [3] ptr))))) mem)
 	for {
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(!config.BigEndian) {
 			break
 		}
@@ -765,10 +764,9 @@ func rewriteValueMIPS_OpAtomicAnd8_0(v *Value) bool {
 	// cond: config.BigEndian
 	// result: (LoweredAtomicAnd (AND <typ.UInt32Ptr> (MOVWconst [^3]) ptr) (OR <typ.UInt32> (SLL <typ.UInt32> (ZeroExt8to32 val) (SLLconst <typ.UInt32> [3] (ANDconst <typ.UInt32> [3] (XORconst <typ.UInt32> [3] ptr)))) (NORconst [0] <typ.UInt32> (SLL <typ.UInt32> (MOVWconst [0xff]) (SLLconst <typ.UInt32> [3] (ANDconst <typ.UInt32> [3] (XORconst <typ.UInt32> [3] ptr)))))) mem)
 	for {
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(config.BigEndian) {
 			break
 		}
@@ -824,11 +822,10 @@ func rewriteValueMIPS_OpAtomicCompareAndSwap32_0(v *Value) bool {
 	// cond:
 	// result: (LoweredAtomicCas ptr old new_ mem)
 	for {
-		_ = v.Args[3]
+		mem := v.Args[3]
 		ptr := v.Args[0]
 		old := v.Args[1]
 		new_ := v.Args[2]
-		mem := v.Args[3]
 		v.reset(OpMIPSLoweredAtomicCas)
 		v.AddArg(ptr)
 		v.AddArg(old)
@@ -842,10 +839,9 @@ func rewriteValueMIPS_OpAtomicExchange32_0(v *Value) bool {
 	// cond:
 	// result: (LoweredAtomicExchange ptr val mem)
 	for {
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		v.reset(OpMIPSLoweredAtomicExchange)
 		v.AddArg(ptr)
 		v.AddArg(val)
@@ -858,9 +854,8 @@ func rewriteValueMIPS_OpAtomicLoad32_0(v *Value) bool {
 	// cond:
 	// result: (LoweredAtomicLoad ptr mem)
 	for {
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		v.reset(OpMIPSLoweredAtomicLoad)
 		v.AddArg(ptr)
 		v.AddArg(mem)
@@ -872,9 +867,8 @@ func rewriteValueMIPS_OpAtomicLoadPtr_0(v *Value) bool {
 	// cond:
 	// result: (LoweredAtomicLoad ptr mem)
 	for {
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		v.reset(OpMIPSLoweredAtomicLoad)
 		v.AddArg(ptr)
 		v.AddArg(mem)
@@ -883,19 +877,15 @@ func rewriteValueMIPS_OpAtomicLoadPtr_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpAtomicOr8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	config := b.Func.Config
-	_ = config
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (AtomicOr8 ptr val mem)
 	// cond: !config.BigEndian
 	// result: (LoweredAtomicOr (AND <typ.UInt32Ptr> (MOVWconst [^3]) ptr) (SLL <typ.UInt32> (ZeroExt8to32 val) (SLLconst <typ.UInt32> [3] (ANDconst <typ.UInt32> [3] ptr))) mem)
 	for {
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(!config.BigEndian) {
 			break
 		}
@@ -925,10 +915,9 @@ func rewriteValueMIPS_OpAtomicOr8_0(v *Value) bool {
 	// cond: config.BigEndian
 	// result: (LoweredAtomicOr (AND <typ.UInt32Ptr> (MOVWconst [^3]) ptr) (SLL <typ.UInt32> (ZeroExt8to32 val) (SLLconst <typ.UInt32> [3] (ANDconst <typ.UInt32> [3] (XORconst <typ.UInt32> [3] ptr)))) mem)
 	for {
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(config.BigEndian) {
 			break
 		}
@@ -964,10 +953,9 @@ func rewriteValueMIPS_OpAtomicStore32_0(v *Value) bool {
 	// cond:
 	// result: (LoweredAtomicStore ptr val mem)
 	for {
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		v.reset(OpMIPSLoweredAtomicStore)
 		v.AddArg(ptr)
 		v.AddArg(val)
@@ -980,10 +968,9 @@ func rewriteValueMIPS_OpAtomicStorePtrNoWB_0(v *Value) bool {
 	// cond:
 	// result: (LoweredAtomicStore ptr val mem)
 	for {
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		v.reset(OpMIPSLoweredAtomicStore)
 		v.AddArg(ptr)
 		v.AddArg(val)
@@ -993,15 +980,13 @@ func rewriteValueMIPS_OpAtomicStorePtrNoWB_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpAvg32u_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Avg32u <t> x y)
 	// cond:
 	// result: (ADD (SRLconst <t> (SUB <t> x y) [1]) y)
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSADD)
 		v0 := b.NewValue0(v.Pos, OpMIPSSRLconst, t)
 		v0.AuxInt = 1
@@ -1016,9 +1001,7 @@ func rewriteValueMIPS_OpAvg32u_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpBitLen32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (BitLen32 <t> x)
 	// cond:
 	// result: (SUB (MOVWconst [32]) (CLZ <t> x))
@@ -1041,10 +1024,9 @@ func rewriteValueMIPS_OpClosureCall_0(v *Value) bool {
 	// result: (CALLclosure [argwid] entry closure mem)
 	for {
 		argwid := v.AuxInt
-		_ = v.Args[2]
+		mem := v.Args[2]
 		entry := v.Args[0]
 		closure := v.Args[1]
-		mem := v.Args[2]
 		v.reset(OpMIPSCALLclosure)
 		v.AuxInt = argwid
 		v.AddArg(entry)
@@ -1167,9 +1149,7 @@ func rewriteValueMIPS_OpConstNil_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpCtz32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Ctz32 <t> x)
 	// cond:
 	// result: (SUB (MOVWconst [32]) (CLZ <t> (SUBconst <t> [1] (AND <t> x (NEG <t> x)))))
@@ -1273,16 +1253,13 @@ func rewriteValueMIPS_OpCvt64Fto32F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpDiv16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Div16 x y)
 	// cond:
 	// result: (Select1 (DIV (SignExt16to32 x) (SignExt16to32 y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpSelect1)
 		v0 := b.NewValue0(v.Pos, OpMIPSDIV, types.NewTuple(typ.Int32, typ.Int32))
 		v1 := b.NewValue0(v.Pos, OpSignExt16to32, typ.Int32)
@@ -1297,16 +1274,13 @@ func rewriteValueMIPS_OpDiv16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpDiv16u_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Div16u x y)
 	// cond:
 	// result: (Select1 (DIVU (ZeroExt16to32 x) (ZeroExt16to32 y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpSelect1)
 		v0 := b.NewValue0(v.Pos, OpMIPSDIVU, types.NewTuple(typ.UInt32, typ.UInt32))
 		v1 := b.NewValue0(v.Pos, OpZeroExt16to32, typ.UInt32)
@@ -1321,16 +1295,13 @@ func rewriteValueMIPS_OpDiv16u_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpDiv32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Div32 x y)
 	// cond:
 	// result: (Select1 (DIV x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpSelect1)
 		v0 := b.NewValue0(v.Pos, OpMIPSDIV, types.NewTuple(typ.Int32, typ.Int32))
 		v0.AddArg(x)
@@ -1344,9 +1315,8 @@ func rewriteValueMIPS_OpDiv32F_0(v *Value) bool {
 	// cond:
 	// result: (DIVF x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSDIVF)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -1355,16 +1325,13 @@ func rewriteValueMIPS_OpDiv32F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpDiv32u_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Div32u x y)
 	// cond:
 	// result: (Select1 (DIVU x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpSelect1)
 		v0 := b.NewValue0(v.Pos, OpMIPSDIVU, types.NewTuple(typ.UInt32, typ.UInt32))
 		v0.AddArg(x)
@@ -1378,9 +1345,8 @@ func rewriteValueMIPS_OpDiv64F_0(v *Value) bool {
 	// cond:
 	// result: (DIVD x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSDIVD)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -1389,16 +1355,13 @@ func rewriteValueMIPS_OpDiv64F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpDiv8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Div8 x y)
 	// cond:
 	// result: (Select1 (DIV (SignExt8to32 x) (SignExt8to32 y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpSelect1)
 		v0 := b.NewValue0(v.Pos, OpMIPSDIV, types.NewTuple(typ.Int32, typ.Int32))
 		v1 := b.NewValue0(v.Pos, OpSignExt8to32, typ.Int32)
@@ -1413,16 +1376,13 @@ func rewriteValueMIPS_OpDiv8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpDiv8u_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Div8u x y)
 	// cond:
 	// result: (Select1 (DIVU (ZeroExt8to32 x) (ZeroExt8to32 y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpSelect1)
 		v0 := b.NewValue0(v.Pos, OpMIPSDIVU, types.NewTuple(typ.UInt32, typ.UInt32))
 		v1 := b.NewValue0(v.Pos, OpZeroExt8to32, typ.UInt32)
@@ -1437,16 +1397,13 @@ func rewriteValueMIPS_OpDiv8u_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpEq16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Eq16 x y)
 	// cond:
 	// result: (SGTUconst [1] (XOR (ZeroExt16to32 x) (ZeroExt16to32 y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGTUconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSXOR, typ.UInt32)
@@ -1462,16 +1419,13 @@ func rewriteValueMIPS_OpEq16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpEq32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Eq32 x y)
 	// cond:
 	// result: (SGTUconst [1] (XOR x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGTUconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSXOR, typ.UInt32)
@@ -1483,14 +1437,12 @@ func rewriteValueMIPS_OpEq32_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpEq32F_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Eq32F x y)
 	// cond:
 	// result: (FPFlagTrue (CMPEQF x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSFPFlagTrue)
 		v0 := b.NewValue0(v.Pos, OpMIPSCMPEQF, types.TypeFlags)
 		v0.AddArg(x)
@@ -1501,14 +1453,12 @@ func rewriteValueMIPS_OpEq32F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpEq64F_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Eq64F x y)
 	// cond:
 	// result: (FPFlagTrue (CMPEQD x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSFPFlagTrue)
 		v0 := b.NewValue0(v.Pos, OpMIPSCMPEQD, types.TypeFlags)
 		v0.AddArg(x)
@@ -1519,16 +1469,13 @@ func rewriteValueMIPS_OpEq64F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpEq8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Eq8 x y)
 	// cond:
 	// result: (SGTUconst [1] (XOR (ZeroExt8to32 x) (ZeroExt8to32 y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGTUconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSXOR, typ.UInt32)
@@ -1544,16 +1491,13 @@ func rewriteValueMIPS_OpEq8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpEqB_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (EqB x y)
 	// cond:
 	// result: (XORconst [1] (XOR <typ.Bool> x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXORconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSXOR, typ.Bool)
@@ -1565,16 +1509,13 @@ func rewriteValueMIPS_OpEqB_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpEqPtr_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (EqPtr x y)
 	// cond:
 	// result: (SGTUconst [1] (XOR x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGTUconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSXOR, typ.UInt32)
@@ -1586,16 +1527,13 @@ func rewriteValueMIPS_OpEqPtr_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpGeq16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Geq16 x y)
 	// cond:
 	// result: (XORconst [1] (SGT (SignExt16to32 y) (SignExt16to32 x)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXORconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSSGT, typ.Bool)
@@ -1611,16 +1549,13 @@ func rewriteValueMIPS_OpGeq16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpGeq16U_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Geq16U x y)
 	// cond:
 	// result: (XORconst [1] (SGTU (ZeroExt16to32 y) (ZeroExt16to32 x)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXORconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSSGTU, typ.Bool)
@@ -1636,16 +1571,13 @@ func rewriteValueMIPS_OpGeq16U_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpGeq32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Geq32 x y)
 	// cond:
 	// result: (XORconst [1] (SGT y x))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXORconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSSGT, typ.Bool)
@@ -1657,14 +1589,12 @@ func rewriteValueMIPS_OpGeq32_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpGeq32F_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Geq32F x y)
 	// cond:
 	// result: (FPFlagTrue (CMPGEF x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSFPFlagTrue)
 		v0 := b.NewValue0(v.Pos, OpMIPSCMPGEF, types.TypeFlags)
 		v0.AddArg(x)
@@ -1675,16 +1605,13 @@ func rewriteValueMIPS_OpGeq32F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpGeq32U_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Geq32U x y)
 	// cond:
 	// result: (XORconst [1] (SGTU y x))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXORconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSSGTU, typ.Bool)
@@ -1696,14 +1623,12 @@ func rewriteValueMIPS_OpGeq32U_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpGeq64F_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Geq64F x y)
 	// cond:
 	// result: (FPFlagTrue (CMPGED x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSFPFlagTrue)
 		v0 := b.NewValue0(v.Pos, OpMIPSCMPGED, types.TypeFlags)
 		v0.AddArg(x)
@@ -1714,16 +1639,13 @@ func rewriteValueMIPS_OpGeq64F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpGeq8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Geq8 x y)
 	// cond:
 	// result: (XORconst [1] (SGT (SignExt8to32 y) (SignExt8to32 x)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXORconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSSGT, typ.Bool)
@@ -1739,16 +1661,13 @@ func rewriteValueMIPS_OpGeq8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpGeq8U_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Geq8U x y)
 	// cond:
 	// result: (XORconst [1] (SGTU (ZeroExt8to32 y) (ZeroExt8to32 x)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXORconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSSGTU, typ.Bool)
@@ -1791,16 +1710,13 @@ func rewriteValueMIPS_OpGetClosurePtr_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpGreater16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Greater16 x y)
 	// cond:
 	// result: (SGT (SignExt16to32 x) (SignExt16to32 y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGT)
 		v0 := b.NewValue0(v.Pos, OpSignExt16to32, typ.Int32)
 		v0.AddArg(x)
@@ -1813,16 +1729,13 @@ func rewriteValueMIPS_OpGreater16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpGreater16U_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Greater16U x y)
 	// cond:
 	// result: (SGTU (ZeroExt16to32 x) (ZeroExt16to32 y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGTU)
 		v0 := b.NewValue0(v.Pos, OpZeroExt16to32, typ.UInt32)
 		v0.AddArg(x)
@@ -1838,9 +1751,8 @@ func rewriteValueMIPS_OpGreater32_0(v *Value) bool {
 	// cond:
 	// result: (SGT x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGT)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -1849,14 +1761,12 @@ func rewriteValueMIPS_OpGreater32_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpGreater32F_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Greater32F x y)
 	// cond:
 	// result: (FPFlagTrue (CMPGTF x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSFPFlagTrue)
 		v0 := b.NewValue0(v.Pos, OpMIPSCMPGTF, types.TypeFlags)
 		v0.AddArg(x)
@@ -1870,9 +1780,8 @@ func rewriteValueMIPS_OpGreater32U_0(v *Value) bool {
 	// cond:
 	// result: (SGTU x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGTU)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -1881,14 +1790,12 @@ func rewriteValueMIPS_OpGreater32U_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpGreater64F_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Greater64F x y)
 	// cond:
 	// result: (FPFlagTrue (CMPGTD x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSFPFlagTrue)
 		v0 := b.NewValue0(v.Pos, OpMIPSCMPGTD, types.TypeFlags)
 		v0.AddArg(x)
@@ -1899,16 +1806,13 @@ func rewriteValueMIPS_OpGreater64F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpGreater8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Greater8 x y)
 	// cond:
 	// result: (SGT (SignExt8to32 x) (SignExt8to32 y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGT)
 		v0 := b.NewValue0(v.Pos, OpSignExt8to32, typ.Int32)
 		v0.AddArg(x)
@@ -1921,16 +1825,13 @@ func rewriteValueMIPS_OpGreater8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpGreater8U_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Greater8U x y)
 	// cond:
 	// result: (SGTU (ZeroExt8to32 x) (ZeroExt8to32 y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGTU)
 		v0 := b.NewValue0(v.Pos, OpZeroExt8to32, typ.UInt32)
 		v0.AddArg(x)
@@ -1943,16 +1844,13 @@ func rewriteValueMIPS_OpGreater8U_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpHmul32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Hmul32 x y)
 	// cond:
 	// result: (Select0 (MULT x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpSelect0)
 		v0 := b.NewValue0(v.Pos, OpMIPSMULT, types.NewTuple(typ.Int32, typ.Int32))
 		v0.AddArg(x)
@@ -1963,16 +1861,13 @@ func rewriteValueMIPS_OpHmul32_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpHmul32u_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Hmul32u x y)
 	// cond:
 	// result: (Select0 (MULTU x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpSelect0)
 		v0 := b.NewValue0(v.Pos, OpMIPSMULTU, types.NewTuple(typ.UInt32, typ.UInt32))
 		v0.AddArg(x)
@@ -1987,9 +1882,8 @@ func rewriteValueMIPS_OpInterCall_0(v *Value) bool {
 	// result: (CALLinter [argwid] entry mem)
 	for {
 		argwid := v.AuxInt
-		_ = v.Args[1]
-		entry := v.Args[0]
 		mem := v.Args[1]
+		entry := v.Args[0]
 		v.reset(OpMIPSCALLinter)
 		v.AuxInt = argwid
 		v.AddArg(entry)
@@ -2002,9 +1896,8 @@ func rewriteValueMIPS_OpIsInBounds_0(v *Value) bool {
 	// cond:
 	// result: (SGTU len idx)
 	for {
-		_ = v.Args[1]
-		idx := v.Args[0]
 		len := v.Args[1]
+		idx := v.Args[0]
 		v.reset(OpMIPSSGTU)
 		v.AddArg(len)
 		v.AddArg(idx)
@@ -2013,9 +1906,7 @@ func rewriteValueMIPS_OpIsInBounds_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpIsNonNil_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (IsNonNil ptr)
 	// cond:
 	// result: (SGTU ptr (MOVWconst [0]))
@@ -2031,16 +1922,13 @@ func rewriteValueMIPS_OpIsNonNil_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpIsSliceInBounds_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (IsSliceInBounds idx len)
 	// cond:
 	// result: (XORconst [1] (SGTU idx len))
 	for {
-		_ = v.Args[1]
-		idx := v.Args[0]
 		len := v.Args[1]
+		idx := v.Args[0]
 		v.reset(OpMIPSXORconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSSGTU, typ.Bool)
@@ -2052,16 +1940,13 @@ func rewriteValueMIPS_OpIsSliceInBounds_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLeq16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Leq16 x y)
 	// cond:
 	// result: (XORconst [1] (SGT (SignExt16to32 x) (SignExt16to32 y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXORconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSSGT, typ.Bool)
@@ -2077,16 +1962,13 @@ func rewriteValueMIPS_OpLeq16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLeq16U_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Leq16U x y)
 	// cond:
 	// result: (XORconst [1] (SGTU (ZeroExt16to32 x) (ZeroExt16to32 y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXORconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSSGTU, typ.Bool)
@@ -2102,16 +1984,13 @@ func rewriteValueMIPS_OpLeq16U_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLeq32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Leq32 x y)
 	// cond:
 	// result: (XORconst [1] (SGT x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXORconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSSGT, typ.Bool)
@@ -2123,14 +2002,12 @@ func rewriteValueMIPS_OpLeq32_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLeq32F_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Leq32F x y)
 	// cond:
 	// result: (FPFlagTrue (CMPGEF y x))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSFPFlagTrue)
 		v0 := b.NewValue0(v.Pos, OpMIPSCMPGEF, types.TypeFlags)
 		v0.AddArg(y)
@@ -2141,16 +2018,13 @@ func rewriteValueMIPS_OpLeq32F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLeq32U_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Leq32U x y)
 	// cond:
 	// result: (XORconst [1] (SGTU x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXORconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSSGTU, typ.Bool)
@@ -2162,14 +2036,12 @@ func rewriteValueMIPS_OpLeq32U_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLeq64F_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Leq64F x y)
 	// cond:
 	// result: (FPFlagTrue (CMPGED y x))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSFPFlagTrue)
 		v0 := b.NewValue0(v.Pos, OpMIPSCMPGED, types.TypeFlags)
 		v0.AddArg(y)
@@ -2180,16 +2052,13 @@ func rewriteValueMIPS_OpLeq64F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLeq8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Leq8 x y)
 	// cond:
 	// result: (XORconst [1] (SGT (SignExt8to32 x) (SignExt8to32 y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXORconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSSGT, typ.Bool)
@@ -2205,16 +2074,13 @@ func rewriteValueMIPS_OpLeq8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLeq8U_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Leq8U x y)
 	// cond:
 	// result: (XORconst [1] (SGTU (ZeroExt8to32 x) (ZeroExt8to32 y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXORconst)
 		v.AuxInt = 1
 		v0 := b.NewValue0(v.Pos, OpMIPSSGTU, typ.Bool)
@@ -2230,16 +2096,13 @@ func rewriteValueMIPS_OpLeq8U_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLess16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Less16 x y)
 	// cond:
 	// result: (SGT (SignExt16to32 y) (SignExt16to32 x))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGT)
 		v0 := b.NewValue0(v.Pos, OpSignExt16to32, typ.Int32)
 		v0.AddArg(y)
@@ -2252,16 +2115,13 @@ func rewriteValueMIPS_OpLess16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLess16U_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Less16U x y)
 	// cond:
 	// result: (SGTU (ZeroExt16to32 y) (ZeroExt16to32 x))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGTU)
 		v0 := b.NewValue0(v.Pos, OpZeroExt16to32, typ.UInt32)
 		v0.AddArg(y)
@@ -2277,9 +2137,8 @@ func rewriteValueMIPS_OpLess32_0(v *Value) bool {
 	// cond:
 	// result: (SGT y x)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGT)
 		v.AddArg(y)
 		v.AddArg(x)
@@ -2288,14 +2147,12 @@ func rewriteValueMIPS_OpLess32_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLess32F_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Less32F x y)
 	// cond:
 	// result: (FPFlagTrue (CMPGTF y x))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSFPFlagTrue)
 		v0 := b.NewValue0(v.Pos, OpMIPSCMPGTF, types.TypeFlags)
 		v0.AddArg(y)
@@ -2309,9 +2166,8 @@ func rewriteValueMIPS_OpLess32U_0(v *Value) bool {
 	// cond:
 	// result: (SGTU y x)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGTU)
 		v.AddArg(y)
 		v.AddArg(x)
@@ -2320,14 +2176,12 @@ func rewriteValueMIPS_OpLess32U_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLess64F_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Less64F x y)
 	// cond:
 	// result: (FPFlagTrue (CMPGTD y x))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSFPFlagTrue)
 		v0 := b.NewValue0(v.Pos, OpMIPSCMPGTD, types.TypeFlags)
 		v0.AddArg(y)
@@ -2338,16 +2192,13 @@ func rewriteValueMIPS_OpLess64F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLess8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Less8 x y)
 	// cond:
 	// result: (SGT (SignExt8to32 y) (SignExt8to32 x))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGT)
 		v0 := b.NewValue0(v.Pos, OpSignExt8to32, typ.Int32)
 		v0.AddArg(y)
@@ -2360,16 +2211,13 @@ func rewriteValueMIPS_OpLess8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLess8U_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Less8U x y)
 	// cond:
 	// result: (SGTU (ZeroExt8to32 y) (ZeroExt8to32 x))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGTU)
 		v0 := b.NewValue0(v.Pos, OpZeroExt8to32, typ.UInt32)
 		v0.AddArg(y)
@@ -2386,9 +2234,8 @@ func rewriteValueMIPS_OpLoad_0(v *Value) bool {
 	// result: (MOVBUload ptr mem)
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(t.IsBoolean()) {
 			break
 		}
@@ -2402,9 +2249,8 @@ func rewriteValueMIPS_OpLoad_0(v *Value) bool {
 	// result: (MOVBload ptr mem)
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(is8BitInt(t) && isSigned(t)) {
 			break
 		}
@@ -2418,9 +2264,8 @@ func rewriteValueMIPS_OpLoad_0(v *Value) bool {
 	// result: (MOVBUload ptr mem)
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(is8BitInt(t) && !isSigned(t)) {
 			break
 		}
@@ -2434,9 +2279,8 @@ func rewriteValueMIPS_OpLoad_0(v *Value) bool {
 	// result: (MOVHload ptr mem)
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(is16BitInt(t) && isSigned(t)) {
 			break
 		}
@@ -2450,9 +2294,8 @@ func rewriteValueMIPS_OpLoad_0(v *Value) bool {
 	// result: (MOVHUload ptr mem)
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(is16BitInt(t) && !isSigned(t)) {
 			break
 		}
@@ -2466,9 +2309,8 @@ func rewriteValueMIPS_OpLoad_0(v *Value) bool {
 	// result: (MOVWload ptr mem)
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(is32BitInt(t) || isPtr(t)) {
 			break
 		}
@@ -2482,9 +2324,8 @@ func rewriteValueMIPS_OpLoad_0(v *Value) bool {
 	// result: (MOVFload ptr mem)
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(is32BitFloat(t)) {
 			break
 		}
@@ -2498,9 +2339,8 @@ func rewriteValueMIPS_OpLoad_0(v *Value) bool {
 	// result: (MOVDload ptr mem)
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(is64BitFloat(t)) {
 			break
 		}
@@ -2511,19 +2351,30 @@ func rewriteValueMIPS_OpLoad_0(v *Value) bool {
 	}
 	return false
 }
+func rewriteValueMIPS_OpLocalAddr_0(v *Value) bool {
+	// match: (LocalAddr {sym} base _)
+	// cond:
+	// result: (MOVWaddr {sym} base)
+	for {
+		sym := v.Aux
+		_ = v.Args[1]
+		base := v.Args[0]
+		v.reset(OpMIPSMOVWaddr)
+		v.Aux = sym
+		v.AddArg(base)
+		return true
+	}
+}
 func rewriteValueMIPS_OpLsh16x16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Lsh16x16 <t> x y)
 	// cond:
 	// result: (CMOVZ (SLL <t> x (ZeroExt16to32 y) ) (MOVWconst [0]) (SGTUconst [32] (ZeroExt16to32 y)))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSLL, t)
 		v0.AddArg(x)
@@ -2545,17 +2396,14 @@ func rewriteValueMIPS_OpLsh16x16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLsh16x32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Lsh16x32 <t> x y)
 	// cond:
 	// result: (CMOVZ (SLL <t> x y) (MOVWconst [0]) (SGTUconst [32] y))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSLL, t)
 		v0.AddArg(x)
@@ -2612,17 +2460,14 @@ func rewriteValueMIPS_OpLsh16x64_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLsh16x8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Lsh16x8 <t> x y)
 	// cond:
 	// result: (CMOVZ (SLL <t> x (ZeroExt8to32 y) ) (MOVWconst [0]) (SGTUconst [32] (ZeroExt8to32 y)))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSLL, t)
 		v0.AddArg(x)
@@ -2644,17 +2489,14 @@ func rewriteValueMIPS_OpLsh16x8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLsh32x16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Lsh32x16 <t> x y)
 	// cond:
 	// result: (CMOVZ (SLL <t> x (ZeroExt16to32 y) ) (MOVWconst [0]) (SGTUconst [32] (ZeroExt16to32 y)))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSLL, t)
 		v0.AddArg(x)
@@ -2676,17 +2518,14 @@ func rewriteValueMIPS_OpLsh32x16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLsh32x32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Lsh32x32 <t> x y)
 	// cond:
 	// result: (CMOVZ (SLL <t> x y) (MOVWconst [0]) (SGTUconst [32] y))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSLL, t)
 		v0.AddArg(x)
@@ -2743,17 +2582,14 @@ func rewriteValueMIPS_OpLsh32x64_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLsh32x8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Lsh32x8 <t> x y)
 	// cond:
 	// result: (CMOVZ (SLL <t> x (ZeroExt8to32 y) ) (MOVWconst [0]) (SGTUconst [32] (ZeroExt8to32 y)))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSLL, t)
 		v0.AddArg(x)
@@ -2775,17 +2611,14 @@ func rewriteValueMIPS_OpLsh32x8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLsh8x16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Lsh8x16 <t> x y)
 	// cond:
 	// result: (CMOVZ (SLL <t> x (ZeroExt16to32 y) ) (MOVWconst [0]) (SGTUconst [32] (ZeroExt16to32 y)))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSLL, t)
 		v0.AddArg(x)
@@ -2807,17 +2640,14 @@ func rewriteValueMIPS_OpLsh8x16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLsh8x32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Lsh8x32 <t> x y)
 	// cond:
 	// result: (CMOVZ (SLL <t> x y) (MOVWconst [0]) (SGTUconst [32] y))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSLL, t)
 		v0.AddArg(x)
@@ -2874,17 +2704,14 @@ func rewriteValueMIPS_OpLsh8x64_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpLsh8x8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Lsh8x8 <t> x y)
 	// cond:
 	// result: (CMOVZ (SLL <t> x (ZeroExt8to32 y) ) (MOVWconst [0]) (SGTUconst [32] (ZeroExt8to32 y)))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSLL, t)
 		v0.AddArg(x)
@@ -2925,13 +2752,12 @@ func rewriteValueMIPS_OpMIPSADD_0(v *Value) bool {
 	// cond:
 	// result: (ADDconst [c] x)
 	for {
-		_ = v.Args[1]
+		x := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWconst {
 			break
 		}
 		c := v_0.AuxInt
-		x := v.Args[1]
 		v.reset(OpMIPSADDconst)
 		v.AuxInt = c
 		v.AddArg(x)
@@ -2957,13 +2783,12 @@ func rewriteValueMIPS_OpMIPSADD_0(v *Value) bool {
 	// cond:
 	// result: (SUB x y)
 	for {
-		_ = v.Args[1]
+		x := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSNEG {
 			break
 		}
 		y := v_0.Args[0]
-		x := v.Args[1]
 		v.reset(OpMIPSSUB)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -3053,7 +2878,6 @@ func rewriteValueMIPS_OpMIPSADDconst_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpMIPSAND_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (AND x (MOVWconst [c]))
 	// cond:
 	// result: (ANDconst [c] x)
@@ -3074,13 +2898,12 @@ func rewriteValueMIPS_OpMIPSAND_0(v *Value) bool {
 	// cond:
 	// result: (ANDconst [c] x)
 	for {
-		_ = v.Args[1]
+		x := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWconst {
 			break
 		}
 		c := v_0.AuxInt
-		x := v.Args[1]
 		v.reset(OpMIPSANDconst)
 		v.AuxInt = c
 		v.AddArg(x)
@@ -3090,9 +2913,8 @@ func rewriteValueMIPS_OpMIPSAND_0(v *Value) bool {
 	// cond:
 	// result: x
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
-		if x != v.Args[1] {
+		x := v.Args[1]
+		if x != v.Args[0] {
 			break
 		}
 		v.reset(OpCopy)
@@ -3218,14 +3040,12 @@ func rewriteValueMIPS_OpMIPSANDconst_0(v *Value) bool {
 	return false
 }
 func rewriteValueMIPS_OpMIPSCMOVZ_0(v *Value) bool {
-	b := v.Block
-	_ = b
-	// match: (CMOVZ _ b (MOVWconst [0]))
+	// match: (CMOVZ _ f (MOVWconst [0]))
 	// cond:
-	// result: b
+	// result: f
 	for {
 		_ = v.Args[2]
-		b := v.Args[1]
+		f := v.Args[1]
 		v_2 := v.Args[2]
 		if v_2.Op != OpMIPSMOVWconst {
 			break
@@ -3234,8 +3054,8 @@ func rewriteValueMIPS_OpMIPSCMOVZ_0(v *Value) bool {
 			break
 		}
 		v.reset(OpCopy)
-		v.Type = b.Type
-		v.AddArg(b)
+		v.Type = f.Type
+		v.AddArg(f)
 		return true
 	}
 	// match: (CMOVZ a _ (MOVWconst [c]))
@@ -3261,7 +3081,7 @@ func rewriteValueMIPS_OpMIPSCMOVZ_0(v *Value) bool {
 	// cond:
 	// result: (CMOVZzero a c)
 	for {
-		_ = v.Args[2]
+		c := v.Args[2]
 		a := v.Args[0]
 		v_1 := v.Args[1]
 		if v_1.Op != OpMIPSMOVWconst {
@@ -3270,7 +3090,6 @@ func rewriteValueMIPS_OpMIPSCMOVZ_0(v *Value) bool {
 		if v_1.AuxInt != 0 {
 			break
 		}
-		c := v.Args[2]
 		v.reset(OpMIPSCMOVZzero)
 		v.AddArg(a)
 		v.AddArg(c)
@@ -3321,14 +3140,13 @@ func rewriteValueMIPS_OpMIPSLoweredAtomicAdd_0(v *Value) bool {
 	// cond: is16Bit(c)
 	// result: (LoweredAtomicAddconst [c] ptr mem)
 	for {
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		v_1 := v.Args[1]
 		if v_1.Op != OpMIPSMOVWconst {
 			break
 		}
 		c := v_1.AuxInt
-		mem := v.Args[2]
 		if !(is16Bit(c)) {
 			break
 		}
@@ -3345,7 +3163,7 @@ func rewriteValueMIPS_OpMIPSLoweredAtomicStore_0(v *Value) bool {
 	// cond:
 	// result: (LoweredAtomicStorezero ptr mem)
 	for {
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		v_1 := v.Args[1]
 		if v_1.Op != OpMIPSMOVWconst {
@@ -3354,7 +3172,6 @@ func rewriteValueMIPS_OpMIPSLoweredAtomicStore_0(v *Value) bool {
 		if v_1.AuxInt != 0 {
 			break
 		}
-		mem := v.Args[2]
 		v.reset(OpMIPSLoweredAtomicStorezero)
 		v.AddArg(ptr)
 		v.AddArg(mem)
@@ -3369,14 +3186,13 @@ func rewriteValueMIPS_OpMIPSMOVBUload_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		x := v.Args[0]
 		if x.Op != OpMIPSADDconst {
 			break
 		}
 		off2 := x.AuxInt
 		ptr := x.Args[0]
-		mem := v.Args[1]
 		if !(is16Bit(off1+off2) || x.Uses == 1) {
 			break
 		}
@@ -3393,7 +3209,7 @@ func rewriteValueMIPS_OpMIPSMOVBUload_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym1 := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWaddr {
 			break
@@ -3401,7 +3217,6 @@ func rewriteValueMIPS_OpMIPSMOVBUload_0(v *Value) bool {
 		off2 := v_0.AuxInt
 		sym2 := v_0.Aux
 		ptr := v_0.Args[0]
-		mem := v.Args[1]
 		if !(canMergeSym(sym1, sym2)) {
 			break
 		}
@@ -3440,7 +3255,6 @@ func rewriteValueMIPS_OpMIPSMOVBUload_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpMIPSMOVBUreg_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (MOVBUreg x:(MOVBUload _ _))
 	// cond:
 	// result: (MOVWreg x)
@@ -3477,14 +3291,13 @@ func rewriteValueMIPS_OpMIPSMOVBUreg_0(v *Value) bool {
 		}
 		off := x.AuxInt
 		sym := x.Aux
-		_ = x.Args[1]
-		ptr := x.Args[0]
 		mem := x.Args[1]
+		ptr := x.Args[0]
 		if !(x.Uses == 1 && clobber(x)) {
 			break
 		}
 		b = x.Block
-		v0 := b.NewValue0(v.Pos, OpMIPSMOVBUload, t)
+		v0 := b.NewValue0(x.Pos, OpMIPSMOVBUload, t)
 		v.reset(OpCopy)
 		v.AddArg(v0)
 		v0.AuxInt = off
@@ -3530,14 +3343,13 @@ func rewriteValueMIPS_OpMIPSMOVBload_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		x := v.Args[0]
 		if x.Op != OpMIPSADDconst {
 			break
 		}
 		off2 := x.AuxInt
 		ptr := x.Args[0]
-		mem := v.Args[1]
 		if !(is16Bit(off1+off2) || x.Uses == 1) {
 			break
 		}
@@ -3554,7 +3366,7 @@ func rewriteValueMIPS_OpMIPSMOVBload_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym1 := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWaddr {
 			break
@@ -3562,7 +3374,6 @@ func rewriteValueMIPS_OpMIPSMOVBload_0(v *Value) bool {
 		off2 := v_0.AuxInt
 		sym2 := v_0.Aux
 		ptr := v_0.Args[0]
-		mem := v.Args[1]
 		if !(canMergeSym(sym1, sym2)) {
 			break
 		}
@@ -3601,7 +3412,6 @@ func rewriteValueMIPS_OpMIPSMOVBload_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpMIPSMOVBreg_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (MOVBreg x:(MOVBload _ _))
 	// cond:
 	// result: (MOVWreg x)
@@ -3638,14 +3448,13 @@ func rewriteValueMIPS_OpMIPSMOVBreg_0(v *Value) bool {
 		}
 		off := x.AuxInt
 		sym := x.Aux
-		_ = x.Args[1]
-		ptr := x.Args[0]
 		mem := x.Args[1]
+		ptr := x.Args[0]
 		if !(x.Uses == 1 && clobber(x)) {
 			break
 		}
 		b = x.Block
-		v0 := b.NewValue0(v.Pos, OpMIPSMOVBload, t)
+		v0 := b.NewValue0(x.Pos, OpMIPSMOVBload, t)
 		v.reset(OpCopy)
 		v.AddArg(v0)
 		v0.AuxInt = off
@@ -3694,7 +3503,7 @@ func rewriteValueMIPS_OpMIPSMOVBstore_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		x := v.Args[0]
 		if x.Op != OpMIPSADDconst {
 			break
@@ -3702,7 +3511,6 @@ func rewriteValueMIPS_OpMIPSMOVBstore_0(v *Value) bool {
 		off2 := x.AuxInt
 		ptr := x.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(is16Bit(off1+off2) || x.Uses == 1) {
 			break
 		}
@@ -3720,7 +3528,7 @@ func rewriteValueMIPS_OpMIPSMOVBstore_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym1 := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWaddr {
 			break
@@ -3729,7 +3537,6 @@ func rewriteValueMIPS_OpMIPSMOVBstore_0(v *Value) bool {
 		sym2 := v_0.Aux
 		ptr := v_0.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(canMergeSym(sym1, sym2)) {
 			break
 		}
@@ -3747,7 +3554,7 @@ func rewriteValueMIPS_OpMIPSMOVBstore_0(v *Value) bool {
 	for {
 		off := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		v_1 := v.Args[1]
 		if v_1.Op != OpMIPSMOVWconst {
@@ -3756,7 +3563,6 @@ func rewriteValueMIPS_OpMIPSMOVBstore_0(v *Value) bool {
 		if v_1.AuxInt != 0 {
 			break
 		}
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVBstorezero)
 		v.AuxInt = off
 		v.Aux = sym
@@ -3770,14 +3576,13 @@ func rewriteValueMIPS_OpMIPSMOVBstore_0(v *Value) bool {
 	for {
 		off := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		v_1 := v.Args[1]
 		if v_1.Op != OpMIPSMOVBreg {
 			break
 		}
 		x := v_1.Args[0]
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVBstore)
 		v.AuxInt = off
 		v.Aux = sym
@@ -3792,14 +3597,13 @@ func rewriteValueMIPS_OpMIPSMOVBstore_0(v *Value) bool {
 	for {
 		off := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		v_1 := v.Args[1]
 		if v_1.Op != OpMIPSMOVBUreg {
 			break
 		}
 		x := v_1.Args[0]
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVBstore)
 		v.AuxInt = off
 		v.Aux = sym
@@ -3814,14 +3618,13 @@ func rewriteValueMIPS_OpMIPSMOVBstore_0(v *Value) bool {
 	for {
 		off := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		v_1 := v.Args[1]
 		if v_1.Op != OpMIPSMOVHreg {
 			break
 		}
 		x := v_1.Args[0]
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVBstore)
 		v.AuxInt = off
 		v.Aux = sym
@@ -3836,14 +3639,13 @@ func rewriteValueMIPS_OpMIPSMOVBstore_0(v *Value) bool {
 	for {
 		off := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		v_1 := v.Args[1]
 		if v_1.Op != OpMIPSMOVHUreg {
 			break
 		}
 		x := v_1.Args[0]
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVBstore)
 		v.AuxInt = off
 		v.Aux = sym
@@ -3858,14 +3660,13 @@ func rewriteValueMIPS_OpMIPSMOVBstore_0(v *Value) bool {
 	for {
 		off := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		v_1 := v.Args[1]
 		if v_1.Op != OpMIPSMOVWreg {
 			break
 		}
 		x := v_1.Args[0]
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVBstore)
 		v.AuxInt = off
 		v.Aux = sym
@@ -3883,14 +3684,13 @@ func rewriteValueMIPS_OpMIPSMOVBstorezero_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		x := v.Args[0]
 		if x.Op != OpMIPSADDconst {
 			break
 		}
 		off2 := x.AuxInt
 		ptr := x.Args[0]
-		mem := v.Args[1]
 		if !(is16Bit(off1+off2) || x.Uses == 1) {
 			break
 		}
@@ -3907,7 +3707,7 @@ func rewriteValueMIPS_OpMIPSMOVBstorezero_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym1 := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWaddr {
 			break
@@ -3915,7 +3715,6 @@ func rewriteValueMIPS_OpMIPSMOVBstorezero_0(v *Value) bool {
 		off2 := v_0.AuxInt
 		sym2 := v_0.Aux
 		ptr := v_0.Args[0]
-		mem := v.Args[1]
 		if !(canMergeSym(sym1, sym2)) {
 			break
 		}
@@ -3935,14 +3734,13 @@ func rewriteValueMIPS_OpMIPSMOVDload_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		x := v.Args[0]
 		if x.Op != OpMIPSADDconst {
 			break
 		}
 		off2 := x.AuxInt
 		ptr := x.Args[0]
-		mem := v.Args[1]
 		if !(is16Bit(off1+off2) || x.Uses == 1) {
 			break
 		}
@@ -3959,7 +3757,7 @@ func rewriteValueMIPS_OpMIPSMOVDload_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym1 := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWaddr {
 			break
@@ -3967,7 +3765,6 @@ func rewriteValueMIPS_OpMIPSMOVDload_0(v *Value) bool {
 		off2 := v_0.AuxInt
 		sym2 := v_0.Aux
 		ptr := v_0.Args[0]
-		mem := v.Args[1]
 		if !(canMergeSym(sym1, sym2)) {
 			break
 		}
@@ -4012,7 +3809,7 @@ func rewriteValueMIPS_OpMIPSMOVDstore_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		x := v.Args[0]
 		if x.Op != OpMIPSADDconst {
 			break
@@ -4020,7 +3817,6 @@ func rewriteValueMIPS_OpMIPSMOVDstore_0(v *Value) bool {
 		off2 := x.AuxInt
 		ptr := x.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(is16Bit(off1+off2) || x.Uses == 1) {
 			break
 		}
@@ -4038,7 +3834,7 @@ func rewriteValueMIPS_OpMIPSMOVDstore_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym1 := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWaddr {
 			break
@@ -4047,7 +3843,6 @@ func rewriteValueMIPS_OpMIPSMOVDstore_0(v *Value) bool {
 		sym2 := v_0.Aux
 		ptr := v_0.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(canMergeSym(sym1, sym2)) {
 			break
 		}
@@ -4068,14 +3863,13 @@ func rewriteValueMIPS_OpMIPSMOVFload_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		x := v.Args[0]
 		if x.Op != OpMIPSADDconst {
 			break
 		}
 		off2 := x.AuxInt
 		ptr := x.Args[0]
-		mem := v.Args[1]
 		if !(is16Bit(off1+off2) || x.Uses == 1) {
 			break
 		}
@@ -4092,7 +3886,7 @@ func rewriteValueMIPS_OpMIPSMOVFload_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym1 := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWaddr {
 			break
@@ -4100,7 +3894,6 @@ func rewriteValueMIPS_OpMIPSMOVFload_0(v *Value) bool {
 		off2 := v_0.AuxInt
 		sym2 := v_0.Aux
 		ptr := v_0.Args[0]
-		mem := v.Args[1]
 		if !(canMergeSym(sym1, sym2)) {
 			break
 		}
@@ -4145,7 +3938,7 @@ func rewriteValueMIPS_OpMIPSMOVFstore_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		x := v.Args[0]
 		if x.Op != OpMIPSADDconst {
 			break
@@ -4153,7 +3946,6 @@ func rewriteValueMIPS_OpMIPSMOVFstore_0(v *Value) bool {
 		off2 := x.AuxInt
 		ptr := x.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(is16Bit(off1+off2) || x.Uses == 1) {
 			break
 		}
@@ -4171,7 +3963,7 @@ func rewriteValueMIPS_OpMIPSMOVFstore_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym1 := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWaddr {
 			break
@@ -4180,7 +3972,6 @@ func rewriteValueMIPS_OpMIPSMOVFstore_0(v *Value) bool {
 		sym2 := v_0.Aux
 		ptr := v_0.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(canMergeSym(sym1, sym2)) {
 			break
 		}
@@ -4201,14 +3992,13 @@ func rewriteValueMIPS_OpMIPSMOVHUload_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		x := v.Args[0]
 		if x.Op != OpMIPSADDconst {
 			break
 		}
 		off2 := x.AuxInt
 		ptr := x.Args[0]
-		mem := v.Args[1]
 		if !(is16Bit(off1+off2) || x.Uses == 1) {
 			break
 		}
@@ -4225,7 +4015,7 @@ func rewriteValueMIPS_OpMIPSMOVHUload_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym1 := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWaddr {
 			break
@@ -4233,7 +4023,6 @@ func rewriteValueMIPS_OpMIPSMOVHUload_0(v *Value) bool {
 		off2 := v_0.AuxInt
 		sym2 := v_0.Aux
 		ptr := v_0.Args[0]
-		mem := v.Args[1]
 		if !(canMergeSym(sym1, sym2)) {
 			break
 		}
@@ -4272,7 +4061,6 @@ func rewriteValueMIPS_OpMIPSMOVHUload_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpMIPSMOVHUreg_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (MOVHUreg x:(MOVBUload _ _))
 	// cond:
 	// result: (MOVWreg x)
@@ -4334,14 +4122,13 @@ func rewriteValueMIPS_OpMIPSMOVHUreg_0(v *Value) bool {
 		}
 		off := x.AuxInt
 		sym := x.Aux
-		_ = x.Args[1]
-		ptr := x.Args[0]
 		mem := x.Args[1]
+		ptr := x.Args[0]
 		if !(x.Uses == 1 && clobber(x)) {
 			break
 		}
 		b = x.Block
-		v0 := b.NewValue0(v.Pos, OpMIPSMOVHUload, t)
+		v0 := b.NewValue0(x.Pos, OpMIPSMOVHUload, t)
 		v.reset(OpCopy)
 		v.AddArg(v0)
 		v0.AuxInt = off
@@ -4387,14 +4174,13 @@ func rewriteValueMIPS_OpMIPSMOVHload_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		x := v.Args[0]
 		if x.Op != OpMIPSADDconst {
 			break
 		}
 		off2 := x.AuxInt
 		ptr := x.Args[0]
-		mem := v.Args[1]
 		if !(is16Bit(off1+off2) || x.Uses == 1) {
 			break
 		}
@@ -4411,7 +4197,7 @@ func rewriteValueMIPS_OpMIPSMOVHload_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym1 := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWaddr {
 			break
@@ -4419,7 +4205,6 @@ func rewriteValueMIPS_OpMIPSMOVHload_0(v *Value) bool {
 		off2 := v_0.AuxInt
 		sym2 := v_0.Aux
 		ptr := v_0.Args[0]
-		mem := v.Args[1]
 		if !(canMergeSym(sym1, sym2)) {
 			break
 		}
@@ -4458,7 +4243,6 @@ func rewriteValueMIPS_OpMIPSMOVHload_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpMIPSMOVHreg_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (MOVHreg x:(MOVBload _ _))
 	// cond:
 	// result: (MOVWreg x)
@@ -4545,14 +4329,13 @@ func rewriteValueMIPS_OpMIPSMOVHreg_0(v *Value) bool {
 		}
 		off := x.AuxInt
 		sym := x.Aux
-		_ = x.Args[1]
-		ptr := x.Args[0]
 		mem := x.Args[1]
+		ptr := x.Args[0]
 		if !(x.Uses == 1 && clobber(x)) {
 			break
 		}
 		b = x.Block
-		v0 := b.NewValue0(v.Pos, OpMIPSMOVHload, t)
+		v0 := b.NewValue0(x.Pos, OpMIPSMOVHload, t)
 		v.reset(OpCopy)
 		v.AddArg(v0)
 		v0.AuxInt = off
@@ -4601,7 +4384,7 @@ func rewriteValueMIPS_OpMIPSMOVHstore_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		x := v.Args[0]
 		if x.Op != OpMIPSADDconst {
 			break
@@ -4609,7 +4392,6 @@ func rewriteValueMIPS_OpMIPSMOVHstore_0(v *Value) bool {
 		off2 := x.AuxInt
 		ptr := x.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(is16Bit(off1+off2) || x.Uses == 1) {
 			break
 		}
@@ -4627,7 +4409,7 @@ func rewriteValueMIPS_OpMIPSMOVHstore_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym1 := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWaddr {
 			break
@@ -4636,7 +4418,6 @@ func rewriteValueMIPS_OpMIPSMOVHstore_0(v *Value) bool {
 		sym2 := v_0.Aux
 		ptr := v_0.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(canMergeSym(sym1, sym2)) {
 			break
 		}
@@ -4654,7 +4435,7 @@ func rewriteValueMIPS_OpMIPSMOVHstore_0(v *Value) bool {
 	for {
 		off := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		v_1 := v.Args[1]
 		if v_1.Op != OpMIPSMOVWconst {
@@ -4663,7 +4444,6 @@ func rewriteValueMIPS_OpMIPSMOVHstore_0(v *Value) bool {
 		if v_1.AuxInt != 0 {
 			break
 		}
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVHstorezero)
 		v.AuxInt = off
 		v.Aux = sym
@@ -4677,14 +4457,13 @@ func rewriteValueMIPS_OpMIPSMOVHstore_0(v *Value) bool {
 	for {
 		off := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		v_1 := v.Args[1]
 		if v_1.Op != OpMIPSMOVHreg {
 			break
 		}
 		x := v_1.Args[0]
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVHstore)
 		v.AuxInt = off
 		v.Aux = sym
@@ -4699,14 +4478,13 @@ func rewriteValueMIPS_OpMIPSMOVHstore_0(v *Value) bool {
 	for {
 		off := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		v_1 := v.Args[1]
 		if v_1.Op != OpMIPSMOVHUreg {
 			break
 		}
 		x := v_1.Args[0]
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVHstore)
 		v.AuxInt = off
 		v.Aux = sym
@@ -4721,14 +4499,13 @@ func rewriteValueMIPS_OpMIPSMOVHstore_0(v *Value) bool {
 	for {
 		off := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		v_1 := v.Args[1]
 		if v_1.Op != OpMIPSMOVWreg {
 			break
 		}
 		x := v_1.Args[0]
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVHstore)
 		v.AuxInt = off
 		v.Aux = sym
@@ -4746,14 +4523,13 @@ func rewriteValueMIPS_OpMIPSMOVHstorezero_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		x := v.Args[0]
 		if x.Op != OpMIPSADDconst {
 			break
 		}
 		off2 := x.AuxInt
 		ptr := x.Args[0]
-		mem := v.Args[1]
 		if !(is16Bit(off1+off2) || x.Uses == 1) {
 			break
 		}
@@ -4770,7 +4546,7 @@ func rewriteValueMIPS_OpMIPSMOVHstorezero_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym1 := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWaddr {
 			break
@@ -4778,7 +4554,6 @@ func rewriteValueMIPS_OpMIPSMOVHstorezero_0(v *Value) bool {
 		off2 := v_0.AuxInt
 		sym2 := v_0.Aux
 		ptr := v_0.Args[0]
-		mem := v.Args[1]
 		if !(canMergeSym(sym1, sym2)) {
 			break
 		}
@@ -4798,14 +4573,13 @@ func rewriteValueMIPS_OpMIPSMOVWload_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		x := v.Args[0]
 		if x.Op != OpMIPSADDconst {
 			break
 		}
 		off2 := x.AuxInt
 		ptr := x.Args[0]
-		mem := v.Args[1]
 		if !(is16Bit(off1+off2) || x.Uses == 1) {
 			break
 		}
@@ -4822,7 +4596,7 @@ func rewriteValueMIPS_OpMIPSMOVWload_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym1 := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWaddr {
 			break
@@ -4830,7 +4604,6 @@ func rewriteValueMIPS_OpMIPSMOVWload_0(v *Value) bool {
 		off2 := v_0.AuxInt
 		sym2 := v_0.Aux
 		ptr := v_0.Args[0]
-		mem := v.Args[1]
 		if !(canMergeSym(sym1, sym2)) {
 			break
 		}
@@ -4903,7 +4676,7 @@ func rewriteValueMIPS_OpMIPSMOVWstore_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		x := v.Args[0]
 		if x.Op != OpMIPSADDconst {
 			break
@@ -4911,7 +4684,6 @@ func rewriteValueMIPS_OpMIPSMOVWstore_0(v *Value) bool {
 		off2 := x.AuxInt
 		ptr := x.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(is16Bit(off1+off2) || x.Uses == 1) {
 			break
 		}
@@ -4929,7 +4701,7 @@ func rewriteValueMIPS_OpMIPSMOVWstore_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym1 := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWaddr {
 			break
@@ -4938,7 +4710,6 @@ func rewriteValueMIPS_OpMIPSMOVWstore_0(v *Value) bool {
 		sym2 := v_0.Aux
 		ptr := v_0.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(canMergeSym(sym1, sym2)) {
 			break
 		}
@@ -4956,7 +4727,7 @@ func rewriteValueMIPS_OpMIPSMOVWstore_0(v *Value) bool {
 	for {
 		off := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		v_1 := v.Args[1]
 		if v_1.Op != OpMIPSMOVWconst {
@@ -4965,7 +4736,6 @@ func rewriteValueMIPS_OpMIPSMOVWstore_0(v *Value) bool {
 		if v_1.AuxInt != 0 {
 			break
 		}
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVWstorezero)
 		v.AuxInt = off
 		v.Aux = sym
@@ -4979,14 +4749,13 @@ func rewriteValueMIPS_OpMIPSMOVWstore_0(v *Value) bool {
 	for {
 		off := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		v_1 := v.Args[1]
 		if v_1.Op != OpMIPSMOVWreg {
 			break
 		}
 		x := v_1.Args[0]
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVWstore)
 		v.AuxInt = off
 		v.Aux = sym
@@ -5004,14 +4773,13 @@ func rewriteValueMIPS_OpMIPSMOVWstorezero_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		x := v.Args[0]
 		if x.Op != OpMIPSADDconst {
 			break
 		}
 		off2 := x.AuxInt
 		ptr := x.Args[0]
-		mem := v.Args[1]
 		if !(is16Bit(off1+off2) || x.Uses == 1) {
 			break
 		}
@@ -5028,7 +4796,7 @@ func rewriteValueMIPS_OpMIPSMOVWstorezero_0(v *Value) bool {
 	for {
 		off1 := v.AuxInt
 		sym1 := v.Aux
-		_ = v.Args[1]
+		mem := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWaddr {
 			break
@@ -5036,7 +4804,6 @@ func rewriteValueMIPS_OpMIPSMOVWstorezero_0(v *Value) bool {
 		off2 := v_0.AuxInt
 		sym2 := v_0.Aux
 		ptr := v_0.Args[0]
-		mem := v.Args[1]
 		if !(canMergeSym(sym1, sym2)) {
 			break
 		}
@@ -5086,7 +4853,7 @@ func rewriteValueMIPS_OpMIPSMUL_0(v *Value) bool {
 	// cond:
 	// result: x
 	for {
-		_ = v.Args[1]
+		x := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWconst {
 			break
@@ -5094,7 +4861,6 @@ func rewriteValueMIPS_OpMIPSMUL_0(v *Value) bool {
 		if v_0.AuxInt != 1 {
 			break
 		}
-		x := v.Args[1]
 		v.reset(OpCopy)
 		v.Type = x.Type
 		v.AddArg(x)
@@ -5122,7 +4888,7 @@ func rewriteValueMIPS_OpMIPSMUL_0(v *Value) bool {
 	// cond:
 	// result: (NEG x)
 	for {
-		_ = v.Args[1]
+		x := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWconst {
 			break
@@ -5130,7 +4896,6 @@ func rewriteValueMIPS_OpMIPSMUL_0(v *Value) bool {
 		if v_0.AuxInt != -1 {
 			break
 		}
-		x := v.Args[1]
 		v.reset(OpMIPSNEG)
 		v.AddArg(x)
 		return true
@@ -5156,13 +4921,12 @@ func rewriteValueMIPS_OpMIPSMUL_0(v *Value) bool {
 	// cond: isPowerOfTwo(int64(uint32(c)))
 	// result: (SLLconst [log2(int64(uint32(c)))] x)
 	for {
-		_ = v.Args[1]
+		x := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWconst {
 			break
 		}
 		c := v_0.AuxInt
-		x := v.Args[1]
 		if !(isPowerOfTwo(int64(uint32(c)))) {
 			break
 		}
@@ -5267,13 +5031,12 @@ func rewriteValueMIPS_OpMIPSNOR_0(v *Value) bool {
 	// cond:
 	// result: (NORconst [c] x)
 	for {
-		_ = v.Args[1]
+		x := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWconst {
 			break
 		}
 		c := v_0.AuxInt
-		x := v.Args[1]
 		v.reset(OpMIPSNORconst)
 		v.AuxInt = c
 		v.AddArg(x)
@@ -5300,7 +5063,6 @@ func rewriteValueMIPS_OpMIPSNORconst_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpMIPSOR_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (OR x (MOVWconst [c]))
 	// cond:
 	// result: (ORconst [c] x)
@@ -5321,13 +5083,12 @@ func rewriteValueMIPS_OpMIPSOR_0(v *Value) bool {
 	// cond:
 	// result: (ORconst [c] x)
 	for {
-		_ = v.Args[1]
+		x := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWconst {
 			break
 		}
 		c := v_0.AuxInt
-		x := v.Args[1]
 		v.reset(OpMIPSORconst)
 		v.AuxInt = c
 		v.AddArg(x)
@@ -5337,9 +5098,8 @@ func rewriteValueMIPS_OpMIPSOR_0(v *Value) bool {
 	// cond:
 	// result: x
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
-		if x != v.Args[1] {
+		x := v.Args[1]
+		if x != v.Args[0] {
 			break
 		}
 		v.reset(OpCopy)
@@ -5455,13 +5215,12 @@ func rewriteValueMIPS_OpMIPSSGT_0(v *Value) bool {
 	// cond:
 	// result: (SGTconst [c] x)
 	for {
-		_ = v.Args[1]
+		x := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWconst {
 			break
 		}
 		c := v_0.AuxInt
-		x := v.Args[1]
 		v.reset(OpMIPSSGTconst)
 		v.AuxInt = c
 		v.AddArg(x)
@@ -5491,13 +5250,12 @@ func rewriteValueMIPS_OpMIPSSGTU_0(v *Value) bool {
 	// cond:
 	// result: (SGTUconst [c] x)
 	for {
-		_ = v.Args[1]
+		x := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWconst {
 			break
 		}
 		c := v_0.AuxInt
-		x := v.Args[1]
 		v.reset(OpMIPSSGTUconst)
 		v.AuxInt = c
 		v.AddArg(x)
@@ -5607,7 +5365,7 @@ func rewriteValueMIPS_OpMIPSSGTUconst_0(v *Value) bool {
 		return true
 	}
 	// match: (SGTUconst [c] (SRLconst _ [d]))
-	// cond: uint32(d) <= 31 && 1<<(32-uint32(d)) <= uint32(c)
+	// cond: uint32(d) <= 31 && 0xffffffff>>uint32(d) < uint32(c)
 	// result: (MOVWconst [1])
 	for {
 		c := v.AuxInt
@@ -5616,7 +5374,7 @@ func rewriteValueMIPS_OpMIPSSGTUconst_0(v *Value) bool {
 			break
 		}
 		d := v_0.AuxInt
-		if !(uint32(d) <= 31 && 1<<(32-uint32(d)) <= uint32(c)) {
+		if !(uint32(d) <= 31 && 0xffffffff>>uint32(d) < uint32(c)) {
 			break
 		}
 		v.reset(OpMIPSMOVWconst)
@@ -5844,7 +5602,7 @@ func rewriteValueMIPS_OpMIPSSGTconst_10(v *Value) bool {
 		return true
 	}
 	// match: (SGTconst [c] (SRLconst _ [d]))
-	// cond: 0 <= int32(c) && uint32(d) <= 31 && 1<<(32-uint32(d)) <= int32(c)
+	// cond: 0 <= int32(c) && uint32(d) <= 31 && 0xffffffff>>uint32(d) < uint32(c)
 	// result: (MOVWconst [1])
 	for {
 		c := v.AuxInt
@@ -5853,7 +5611,7 @@ func rewriteValueMIPS_OpMIPSSGTconst_10(v *Value) bool {
 			break
 		}
 		d := v_0.AuxInt
-		if !(0 <= int32(c) && uint32(d) <= 31 && 1<<(32-uint32(d)) <= int32(c)) {
+		if !(0 <= int32(c) && uint32(d) <= 31 && 0xffffffff>>uint32(d) < uint32(c)) {
 			break
 		}
 		v.reset(OpMIPSMOVWconst)
@@ -6079,9 +5837,8 @@ func rewriteValueMIPS_OpMIPSSUB_0(v *Value) bool {
 	// cond:
 	// result: (MOVWconst [0])
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
-		if x != v.Args[1] {
+		x := v.Args[1]
+		if x != v.Args[0] {
 			break
 		}
 		v.reset(OpMIPSMOVWconst)
@@ -6092,7 +5849,7 @@ func rewriteValueMIPS_OpMIPSSUB_0(v *Value) bool {
 	// cond:
 	// result: (NEG x)
 	for {
-		_ = v.Args[1]
+		x := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWconst {
 			break
@@ -6100,7 +5857,6 @@ func rewriteValueMIPS_OpMIPSSUB_0(v *Value) bool {
 		if v_0.AuxInt != 0 {
 			break
 		}
-		x := v.Args[1]
 		v.reset(OpMIPSNEG)
 		v.AddArg(x)
 		return true
@@ -6190,13 +5946,12 @@ func rewriteValueMIPS_OpMIPSXOR_0(v *Value) bool {
 	// cond:
 	// result: (XORconst [c] x)
 	for {
-		_ = v.Args[1]
+		x := v.Args[1]
 		v_0 := v.Args[0]
 		if v_0.Op != OpMIPSMOVWconst {
 			break
 		}
 		c := v_0.AuxInt
-		x := v.Args[1]
 		v.reset(OpMIPSXORconst)
 		v.AuxInt = c
 		v.AddArg(x)
@@ -6206,9 +5961,8 @@ func rewriteValueMIPS_OpMIPSXOR_0(v *Value) bool {
 	// cond:
 	// result: (MOVWconst [0])
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
-		if x != v.Args[1] {
+		x := v.Args[1]
+		if x != v.Args[0] {
 			break
 		}
 		v.reset(OpMIPSMOVWconst)
@@ -6278,16 +6032,13 @@ func rewriteValueMIPS_OpMIPSXORconst_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpMod16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Mod16 x y)
 	// cond:
 	// result: (Select0 (DIV (SignExt16to32 x) (SignExt16to32 y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpSelect0)
 		v0 := b.NewValue0(v.Pos, OpMIPSDIV, types.NewTuple(typ.Int32, typ.Int32))
 		v1 := b.NewValue0(v.Pos, OpSignExt16to32, typ.Int32)
@@ -6302,16 +6053,13 @@ func rewriteValueMIPS_OpMod16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpMod16u_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Mod16u x y)
 	// cond:
 	// result: (Select0 (DIVU (ZeroExt16to32 x) (ZeroExt16to32 y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpSelect0)
 		v0 := b.NewValue0(v.Pos, OpMIPSDIVU, types.NewTuple(typ.UInt32, typ.UInt32))
 		v1 := b.NewValue0(v.Pos, OpZeroExt16to32, typ.UInt32)
@@ -6326,16 +6074,13 @@ func rewriteValueMIPS_OpMod16u_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpMod32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Mod32 x y)
 	// cond:
 	// result: (Select0 (DIV x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpSelect0)
 		v0 := b.NewValue0(v.Pos, OpMIPSDIV, types.NewTuple(typ.Int32, typ.Int32))
 		v0.AddArg(x)
@@ -6346,16 +6091,13 @@ func rewriteValueMIPS_OpMod32_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpMod32u_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Mod32u x y)
 	// cond:
 	// result: (Select0 (DIVU x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpSelect0)
 		v0 := b.NewValue0(v.Pos, OpMIPSDIVU, types.NewTuple(typ.UInt32, typ.UInt32))
 		v0.AddArg(x)
@@ -6366,16 +6108,13 @@ func rewriteValueMIPS_OpMod32u_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpMod8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Mod8 x y)
 	// cond:
 	// result: (Select0 (DIV (SignExt8to32 x) (SignExt8to32 y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpSelect0)
 		v0 := b.NewValue0(v.Pos, OpMIPSDIV, types.NewTuple(typ.Int32, typ.Int32))
 		v1 := b.NewValue0(v.Pos, OpSignExt8to32, typ.Int32)
@@ -6390,16 +6129,13 @@ func rewriteValueMIPS_OpMod8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpMod8u_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Mod8u x y)
 	// cond:
 	// result: (Select0 (DIVU (ZeroExt8to32 x) (ZeroExt8to32 y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpSelect0)
 		v0 := b.NewValue0(v.Pos, OpMIPSDIVU, types.NewTuple(typ.UInt32, typ.UInt32))
 		v1 := b.NewValue0(v.Pos, OpZeroExt8to32, typ.UInt32)
@@ -6414,9 +6150,7 @@ func rewriteValueMIPS_OpMod8u_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpMove_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Move [0] _ _ mem)
 	// cond:
 	// result: mem
@@ -6424,7 +6158,6 @@ func rewriteValueMIPS_OpMove_0(v *Value) bool {
 		if v.AuxInt != 0 {
 			break
 		}
-		_ = v.Args[2]
 		mem := v.Args[2]
 		v.reset(OpCopy)
 		v.Type = mem.Type
@@ -6438,10 +6171,9 @@ func rewriteValueMIPS_OpMove_0(v *Value) bool {
 		if v.AuxInt != 1 {
 			break
 		}
-		_ = v.Args[2]
+		mem := v.Args[2]
 		dst := v.Args[0]
 		src := v.Args[1]
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVBstore)
 		v.AddArg(dst)
 		v0 := b.NewValue0(v.Pos, OpMIPSMOVBUload, typ.UInt8)
@@ -6459,10 +6191,9 @@ func rewriteValueMIPS_OpMove_0(v *Value) bool {
 			break
 		}
 		t := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		dst := v.Args[0]
 		src := v.Args[1]
-		mem := v.Args[2]
 		if !(t.(*types.Type).Alignment()%2 == 0) {
 			break
 		}
@@ -6482,10 +6213,9 @@ func rewriteValueMIPS_OpMove_0(v *Value) bool {
 		if v.AuxInt != 2 {
 			break
 		}
-		_ = v.Args[2]
+		mem := v.Args[2]
 		dst := v.Args[0]
 		src := v.Args[1]
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVBstore)
 		v.AuxInt = 1
 		v.AddArg(dst)
@@ -6512,10 +6242,9 @@ func rewriteValueMIPS_OpMove_0(v *Value) bool {
 			break
 		}
 		t := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		dst := v.Args[0]
 		src := v.Args[1]
-		mem := v.Args[2]
 		if !(t.(*types.Type).Alignment()%4 == 0) {
 			break
 		}
@@ -6536,10 +6265,9 @@ func rewriteValueMIPS_OpMove_0(v *Value) bool {
 			break
 		}
 		t := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		dst := v.Args[0]
 		src := v.Args[1]
-		mem := v.Args[2]
 		if !(t.(*types.Type).Alignment()%2 == 0) {
 			break
 		}
@@ -6568,10 +6296,9 @@ func rewriteValueMIPS_OpMove_0(v *Value) bool {
 		if v.AuxInt != 4 {
 			break
 		}
-		_ = v.Args[2]
+		mem := v.Args[2]
 		dst := v.Args[0]
 		src := v.Args[1]
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVBstore)
 		v.AuxInt = 3
 		v.AddArg(dst)
@@ -6615,10 +6342,9 @@ func rewriteValueMIPS_OpMove_0(v *Value) bool {
 		if v.AuxInt != 3 {
 			break
 		}
-		_ = v.Args[2]
+		mem := v.Args[2]
 		dst := v.Args[0]
 		src := v.Args[1]
-		mem := v.Args[2]
 		v.reset(OpMIPSMOVBstore)
 		v.AuxInt = 2
 		v.AddArg(dst)
@@ -6654,10 +6380,9 @@ func rewriteValueMIPS_OpMove_0(v *Value) bool {
 			break
 		}
 		t := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		dst := v.Args[0]
 		src := v.Args[1]
-		mem := v.Args[2]
 		if !(t.(*types.Type).Alignment()%4 == 0) {
 			break
 		}
@@ -6687,10 +6412,9 @@ func rewriteValueMIPS_OpMove_0(v *Value) bool {
 			break
 		}
 		t := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		dst := v.Args[0]
 		src := v.Args[1]
-		mem := v.Args[2]
 		if !(t.(*types.Type).Alignment()%2 == 0) {
 			break
 		}
@@ -6734,11 +6458,8 @@ func rewriteValueMIPS_OpMove_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpMove_10(v *Value) bool {
 	b := v.Block
-	_ = b
 	config := b.Func.Config
-	_ = config
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Move [6] {t} dst src mem)
 	// cond: t.(*types.Type).Alignment()%2 == 0
 	// result: (MOVHstore [4] dst (MOVHload [4] src mem) (MOVHstore [2] dst (MOVHload [2] src mem) (MOVHstore dst (MOVHload src mem) mem)))
@@ -6747,10 +6468,9 @@ func rewriteValueMIPS_OpMove_10(v *Value) bool {
 			break
 		}
 		t := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		dst := v.Args[0]
 		src := v.Args[1]
-		mem := v.Args[2]
 		if !(t.(*types.Type).Alignment()%2 == 0) {
 			break
 		}
@@ -6789,10 +6509,9 @@ func rewriteValueMIPS_OpMove_10(v *Value) bool {
 			break
 		}
 		t := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		dst := v.Args[0]
 		src := v.Args[1]
-		mem := v.Args[2]
 		if !(t.(*types.Type).Alignment()%4 == 0) {
 			break
 		}
@@ -6831,10 +6550,9 @@ func rewriteValueMIPS_OpMove_10(v *Value) bool {
 			break
 		}
 		t := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		dst := v.Args[0]
 		src := v.Args[1]
-		mem := v.Args[2]
 		if !(t.(*types.Type).Alignment()%4 == 0) {
 			break
 		}
@@ -6880,10 +6598,9 @@ func rewriteValueMIPS_OpMove_10(v *Value) bool {
 	for {
 		s := v.AuxInt
 		t := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		dst := v.Args[0]
 		src := v.Args[1]
-		mem := v.Args[2]
 		if !(s > 16 || t.(*types.Type).Alignment()%4 != 0) {
 			break
 		}
@@ -6905,9 +6622,8 @@ func rewriteValueMIPS_OpMul16_0(v *Value) bool {
 	// cond:
 	// result: (MUL x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSMUL)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -6919,9 +6635,8 @@ func rewriteValueMIPS_OpMul32_0(v *Value) bool {
 	// cond:
 	// result: (MUL x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSMUL)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -6933,9 +6648,8 @@ func rewriteValueMIPS_OpMul32F_0(v *Value) bool {
 	// cond:
 	// result: (MULF x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSMULF)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -6947,9 +6661,8 @@ func rewriteValueMIPS_OpMul32uhilo_0(v *Value) bool {
 	// cond:
 	// result: (MULTU x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSMULTU)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -6961,9 +6674,8 @@ func rewriteValueMIPS_OpMul64F_0(v *Value) bool {
 	// cond:
 	// result: (MULD x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSMULD)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -6975,9 +6687,8 @@ func rewriteValueMIPS_OpMul8_0(v *Value) bool {
 	// cond:
 	// result: (MUL x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSMUL)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -7041,16 +6752,13 @@ func rewriteValueMIPS_OpNeg8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpNeq16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Neq16 x y)
 	// cond:
 	// result: (SGTU (XOR (ZeroExt16to32 x) (ZeroExt16to32 y)) (MOVWconst [0]))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGTU)
 		v0 := b.NewValue0(v.Pos, OpMIPSXOR, typ.UInt32)
 		v1 := b.NewValue0(v.Pos, OpZeroExt16to32, typ.UInt32)
@@ -7068,16 +6776,13 @@ func rewriteValueMIPS_OpNeq16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpNeq32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Neq32 x y)
 	// cond:
 	// result: (SGTU (XOR x y) (MOVWconst [0]))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGTU)
 		v0 := b.NewValue0(v.Pos, OpMIPSXOR, typ.UInt32)
 		v0.AddArg(x)
@@ -7091,14 +6796,12 @@ func rewriteValueMIPS_OpNeq32_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpNeq32F_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Neq32F x y)
 	// cond:
 	// result: (FPFlagFalse (CMPEQF x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSFPFlagFalse)
 		v0 := b.NewValue0(v.Pos, OpMIPSCMPEQF, types.TypeFlags)
 		v0.AddArg(x)
@@ -7109,14 +6812,12 @@ func rewriteValueMIPS_OpNeq32F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpNeq64F_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Neq64F x y)
 	// cond:
 	// result: (FPFlagFalse (CMPEQD x y))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSFPFlagFalse)
 		v0 := b.NewValue0(v.Pos, OpMIPSCMPEQD, types.TypeFlags)
 		v0.AddArg(x)
@@ -7127,16 +6828,13 @@ func rewriteValueMIPS_OpNeq64F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpNeq8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Neq8 x y)
 	// cond:
 	// result: (SGTU (XOR (ZeroExt8to32 x) (ZeroExt8to32 y)) (MOVWconst [0]))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGTU)
 		v0 := b.NewValue0(v.Pos, OpMIPSXOR, typ.UInt32)
 		v1 := b.NewValue0(v.Pos, OpZeroExt8to32, typ.UInt32)
@@ -7157,9 +6855,8 @@ func rewriteValueMIPS_OpNeqB_0(v *Value) bool {
 	// cond:
 	// result: (XOR x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXOR)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -7168,16 +6865,13 @@ func rewriteValueMIPS_OpNeqB_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpNeqPtr_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (NeqPtr x y)
 	// cond:
 	// result: (SGTU (XOR x y) (MOVWconst [0]))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSGTU)
 		v0 := b.NewValue0(v.Pos, OpMIPSXOR, typ.UInt32)
 		v0.AddArg(x)
@@ -7194,9 +6888,8 @@ func rewriteValueMIPS_OpNilCheck_0(v *Value) bool {
 	// cond:
 	// result: (LoweredNilCheck ptr mem)
 	for {
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		v.reset(OpMIPSLoweredNilCheck)
 		v.AddArg(ptr)
 		v.AddArg(mem)
@@ -7247,9 +6940,8 @@ func rewriteValueMIPS_OpOr16_0(v *Value) bool {
 	// cond:
 	// result: (OR x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSOR)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -7261,9 +6953,8 @@ func rewriteValueMIPS_OpOr32_0(v *Value) bool {
 	// cond:
 	// result: (OR x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSOR)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -7275,9 +6966,8 @@ func rewriteValueMIPS_OpOr8_0(v *Value) bool {
 	// cond:
 	// result: (OR x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSOR)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -7289,14 +6979,261 @@ func rewriteValueMIPS_OpOrB_0(v *Value) bool {
 	// cond:
 	// result: (OR x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSOR)
 		v.AddArg(x)
 		v.AddArg(y)
 		return true
 	}
+}
+func rewriteValueMIPS_OpPanicBounds_0(v *Value) bool {
+	// match: (PanicBounds [kind] x y mem)
+	// cond: boundsABI(kind) == 0
+	// result: (LoweredPanicBoundsA [kind] x y mem)
+	for {
+		kind := v.AuxInt
+		mem := v.Args[2]
+		x := v.Args[0]
+		y := v.Args[1]
+		if !(boundsABI(kind) == 0) {
+			break
+		}
+		v.reset(OpMIPSLoweredPanicBoundsA)
+		v.AuxInt = kind
+		v.AddArg(x)
+		v.AddArg(y)
+		v.AddArg(mem)
+		return true
+	}
+	// match: (PanicBounds [kind] x y mem)
+	// cond: boundsABI(kind) == 1
+	// result: (LoweredPanicBoundsB [kind] x y mem)
+	for {
+		kind := v.AuxInt
+		mem := v.Args[2]
+		x := v.Args[0]
+		y := v.Args[1]
+		if !(boundsABI(kind) == 1) {
+			break
+		}
+		v.reset(OpMIPSLoweredPanicBoundsB)
+		v.AuxInt = kind
+		v.AddArg(x)
+		v.AddArg(y)
+		v.AddArg(mem)
+		return true
+	}
+	// match: (PanicBounds [kind] x y mem)
+	// cond: boundsABI(kind) == 2
+	// result: (LoweredPanicBoundsC [kind] x y mem)
+	for {
+		kind := v.AuxInt
+		mem := v.Args[2]
+		x := v.Args[0]
+		y := v.Args[1]
+		if !(boundsABI(kind) == 2) {
+			break
+		}
+		v.reset(OpMIPSLoweredPanicBoundsC)
+		v.AuxInt = kind
+		v.AddArg(x)
+		v.AddArg(y)
+		v.AddArg(mem)
+		return true
+	}
+	return false
+}
+func rewriteValueMIPS_OpPanicExtend_0(v *Value) bool {
+	// match: (PanicExtend [kind] hi lo y mem)
+	// cond: boundsABI(kind) == 0
+	// result: (LoweredPanicExtendA [kind] hi lo y mem)
+	for {
+		kind := v.AuxInt
+		mem := v.Args[3]
+		hi := v.Args[0]
+		lo := v.Args[1]
+		y := v.Args[2]
+		if !(boundsABI(kind) == 0) {
+			break
+		}
+		v.reset(OpMIPSLoweredPanicExtendA)
+		v.AuxInt = kind
+		v.AddArg(hi)
+		v.AddArg(lo)
+		v.AddArg(y)
+		v.AddArg(mem)
+		return true
+	}
+	// match: (PanicExtend [kind] hi lo y mem)
+	// cond: boundsABI(kind) == 1
+	// result: (LoweredPanicExtendB [kind] hi lo y mem)
+	for {
+		kind := v.AuxInt
+		mem := v.Args[3]
+		hi := v.Args[0]
+		lo := v.Args[1]
+		y := v.Args[2]
+		if !(boundsABI(kind) == 1) {
+			break
+		}
+		v.reset(OpMIPSLoweredPanicExtendB)
+		v.AuxInt = kind
+		v.AddArg(hi)
+		v.AddArg(lo)
+		v.AddArg(y)
+		v.AddArg(mem)
+		return true
+	}
+	// match: (PanicExtend [kind] hi lo y mem)
+	// cond: boundsABI(kind) == 2
+	// result: (LoweredPanicExtendC [kind] hi lo y mem)
+	for {
+		kind := v.AuxInt
+		mem := v.Args[3]
+		hi := v.Args[0]
+		lo := v.Args[1]
+		y := v.Args[2]
+		if !(boundsABI(kind) == 2) {
+			break
+		}
+		v.reset(OpMIPSLoweredPanicExtendC)
+		v.AuxInt = kind
+		v.AddArg(hi)
+		v.AddArg(lo)
+		v.AddArg(y)
+		v.AddArg(mem)
+		return true
+	}
+	return false
+}
+func rewriteValueMIPS_OpRotateLeft16_0(v *Value) bool {
+	b := v.Block
+	typ := &b.Func.Config.Types
+	// match: (RotateLeft16 <t> x (MOVWconst [c]))
+	// cond:
+	// result: (Or16 (Lsh16x32 <t> x (MOVWconst [c&15])) (Rsh16Ux32 <t> x (MOVWconst [-c&15])))
+	for {
+		t := v.Type
+		_ = v.Args[1]
+		x := v.Args[0]
+		v_1 := v.Args[1]
+		if v_1.Op != OpMIPSMOVWconst {
+			break
+		}
+		c := v_1.AuxInt
+		v.reset(OpOr16)
+		v0 := b.NewValue0(v.Pos, OpLsh16x32, t)
+		v0.AddArg(x)
+		v1 := b.NewValue0(v.Pos, OpMIPSMOVWconst, typ.UInt32)
+		v1.AuxInt = c & 15
+		v0.AddArg(v1)
+		v.AddArg(v0)
+		v2 := b.NewValue0(v.Pos, OpRsh16Ux32, t)
+		v2.AddArg(x)
+		v3 := b.NewValue0(v.Pos, OpMIPSMOVWconst, typ.UInt32)
+		v3.AuxInt = -c & 15
+		v2.AddArg(v3)
+		v.AddArg(v2)
+		return true
+	}
+	return false
+}
+func rewriteValueMIPS_OpRotateLeft32_0(v *Value) bool {
+	b := v.Block
+	typ := &b.Func.Config.Types
+	// match: (RotateLeft32 <t> x (MOVWconst [c]))
+	// cond:
+	// result: (Or32 (Lsh32x32 <t> x (MOVWconst [c&31])) (Rsh32Ux32 <t> x (MOVWconst [-c&31])))
+	for {
+		t := v.Type
+		_ = v.Args[1]
+		x := v.Args[0]
+		v_1 := v.Args[1]
+		if v_1.Op != OpMIPSMOVWconst {
+			break
+		}
+		c := v_1.AuxInt
+		v.reset(OpOr32)
+		v0 := b.NewValue0(v.Pos, OpLsh32x32, t)
+		v0.AddArg(x)
+		v1 := b.NewValue0(v.Pos, OpMIPSMOVWconst, typ.UInt32)
+		v1.AuxInt = c & 31
+		v0.AddArg(v1)
+		v.AddArg(v0)
+		v2 := b.NewValue0(v.Pos, OpRsh32Ux32, t)
+		v2.AddArg(x)
+		v3 := b.NewValue0(v.Pos, OpMIPSMOVWconst, typ.UInt32)
+		v3.AuxInt = -c & 31
+		v2.AddArg(v3)
+		v.AddArg(v2)
+		return true
+	}
+	return false
+}
+func rewriteValueMIPS_OpRotateLeft64_0(v *Value) bool {
+	b := v.Block
+	typ := &b.Func.Config.Types
+	// match: (RotateLeft64 <t> x (MOVWconst [c]))
+	// cond:
+	// result: (Or64 (Lsh64x32 <t> x (MOVWconst [c&63])) (Rsh64Ux32 <t> x (MOVWconst [-c&63])))
+	for {
+		t := v.Type
+		_ = v.Args[1]
+		x := v.Args[0]
+		v_1 := v.Args[1]
+		if v_1.Op != OpMIPSMOVWconst {
+			break
+		}
+		c := v_1.AuxInt
+		v.reset(OpOr64)
+		v0 := b.NewValue0(v.Pos, OpLsh64x32, t)
+		v0.AddArg(x)
+		v1 := b.NewValue0(v.Pos, OpMIPSMOVWconst, typ.UInt32)
+		v1.AuxInt = c & 63
+		v0.AddArg(v1)
+		v.AddArg(v0)
+		v2 := b.NewValue0(v.Pos, OpRsh64Ux32, t)
+		v2.AddArg(x)
+		v3 := b.NewValue0(v.Pos, OpMIPSMOVWconst, typ.UInt32)
+		v3.AuxInt = -c & 63
+		v2.AddArg(v3)
+		v.AddArg(v2)
+		return true
+	}
+	return false
+}
+func rewriteValueMIPS_OpRotateLeft8_0(v *Value) bool {
+	b := v.Block
+	typ := &b.Func.Config.Types
+	// match: (RotateLeft8 <t> x (MOVWconst [c]))
+	// cond:
+	// result: (Or8 (Lsh8x32 <t> x (MOVWconst [c&7])) (Rsh8Ux32 <t> x (MOVWconst [-c&7])))
+	for {
+		t := v.Type
+		_ = v.Args[1]
+		x := v.Args[0]
+		v_1 := v.Args[1]
+		if v_1.Op != OpMIPSMOVWconst {
+			break
+		}
+		c := v_1.AuxInt
+		v.reset(OpOr8)
+		v0 := b.NewValue0(v.Pos, OpLsh8x32, t)
+		v0.AddArg(x)
+		v1 := b.NewValue0(v.Pos, OpMIPSMOVWconst, typ.UInt32)
+		v1.AuxInt = c & 7
+		v0.AddArg(v1)
+		v.AddArg(v0)
+		v2 := b.NewValue0(v.Pos, OpRsh8Ux32, t)
+		v2.AddArg(x)
+		v3 := b.NewValue0(v.Pos, OpMIPSMOVWconst, typ.UInt32)
+		v3.AuxInt = -c & 7
+		v2.AddArg(v3)
+		v.AddArg(v2)
+		return true
+	}
+	return false
 }
 func rewriteValueMIPS_OpRound32F_0(v *Value) bool {
 	// match: (Round32F x)
@@ -7324,17 +7261,14 @@ func rewriteValueMIPS_OpRound64F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh16Ux16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh16Ux16 <t> x y)
 	// cond:
 	// result: (CMOVZ (SRL <t> (ZeroExt16to32 x) (ZeroExt16to32 y) ) (MOVWconst [0]) (SGTUconst [32] (ZeroExt16to32 y)))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSRL, t)
 		v1 := b.NewValue0(v.Pos, OpZeroExt16to32, typ.UInt32)
@@ -7358,17 +7292,14 @@ func rewriteValueMIPS_OpRsh16Ux16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh16Ux32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh16Ux32 <t> x y)
 	// cond:
 	// result: (CMOVZ (SRL <t> (ZeroExt16to32 x) y) (MOVWconst [0]) (SGTUconst [32] y))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSRL, t)
 		v1 := b.NewValue0(v.Pos, OpZeroExt16to32, typ.UInt32)
@@ -7388,9 +7319,7 @@ func rewriteValueMIPS_OpRsh16Ux32_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh16Ux64_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh16Ux64 x (Const64 [c]))
 	// cond: uint32(c) < 16
 	// result: (SRLconst (SLLconst <typ.UInt32> x [16]) [c+16])
@@ -7434,17 +7363,14 @@ func rewriteValueMIPS_OpRsh16Ux64_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh16Ux8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh16Ux8 <t> x y)
 	// cond:
 	// result: (CMOVZ (SRL <t> (ZeroExt16to32 x) (ZeroExt8to32 y) ) (MOVWconst [0]) (SGTUconst [32] (ZeroExt8to32 y)))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSRL, t)
 		v1 := b.NewValue0(v.Pos, OpZeroExt16to32, typ.UInt32)
@@ -7468,16 +7394,13 @@ func rewriteValueMIPS_OpRsh16Ux8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh16x16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh16x16 x y)
 	// cond:
 	// result: (SRA (SignExt16to32 x) ( CMOVZ <typ.UInt32> (ZeroExt16to32 y) (MOVWconst [-1]) (SGTUconst [32] (ZeroExt16to32 y))))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSRA)
 		v0 := b.NewValue0(v.Pos, OpSignExt16to32, typ.Int32)
 		v0.AddArg(x)
@@ -7501,16 +7424,13 @@ func rewriteValueMIPS_OpRsh16x16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh16x32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh16x32 x y)
 	// cond:
 	// result: (SRA (SignExt16to32 x) ( CMOVZ <typ.UInt32> y (MOVWconst [-1]) (SGTUconst [32] y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSRA)
 		v0 := b.NewValue0(v.Pos, OpSignExt16to32, typ.Int32)
 		v0.AddArg(x)
@@ -7530,9 +7450,7 @@ func rewriteValueMIPS_OpRsh16x32_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh16x64_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh16x64 x (Const64 [c]))
 	// cond: uint32(c) < 16
 	// result: (SRAconst (SLLconst <typ.UInt32> x [16]) [c+16])
@@ -7581,16 +7499,13 @@ func rewriteValueMIPS_OpRsh16x64_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh16x8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh16x8 x y)
 	// cond:
 	// result: (SRA (SignExt16to32 x) ( CMOVZ <typ.UInt32> (ZeroExt8to32 y) (MOVWconst [-1]) (SGTUconst [32] (ZeroExt8to32 y))))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSRA)
 		v0 := b.NewValue0(v.Pos, OpSignExt16to32, typ.Int32)
 		v0.AddArg(x)
@@ -7614,17 +7529,14 @@ func rewriteValueMIPS_OpRsh16x8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh32Ux16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh32Ux16 <t> x y)
 	// cond:
 	// result: (CMOVZ (SRL <t> x (ZeroExt16to32 y) ) (MOVWconst [0]) (SGTUconst [32] (ZeroExt16to32 y)))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSRL, t)
 		v0.AddArg(x)
@@ -7646,17 +7558,14 @@ func rewriteValueMIPS_OpRsh32Ux16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh32Ux32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh32Ux32 <t> x y)
 	// cond:
 	// result: (CMOVZ (SRL <t> x y) (MOVWconst [0]) (SGTUconst [32] y))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSRL, t)
 		v0.AddArg(x)
@@ -7713,17 +7622,14 @@ func rewriteValueMIPS_OpRsh32Ux64_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh32Ux8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh32Ux8 <t> x y)
 	// cond:
 	// result: (CMOVZ (SRL <t> x (ZeroExt8to32 y) ) (MOVWconst [0]) (SGTUconst [32] (ZeroExt8to32 y)))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSRL, t)
 		v0.AddArg(x)
@@ -7745,16 +7651,13 @@ func rewriteValueMIPS_OpRsh32Ux8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh32x16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh32x16 x y)
 	// cond:
 	// result: (SRA x ( CMOVZ <typ.UInt32> (ZeroExt16to32 y) (MOVWconst [-1]) (SGTUconst [32] (ZeroExt16to32 y))))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSRA)
 		v.AddArg(x)
 		v0 := b.NewValue0(v.Pos, OpMIPSCMOVZ, typ.UInt32)
@@ -7776,16 +7679,13 @@ func rewriteValueMIPS_OpRsh32x16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh32x32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh32x32 x y)
 	// cond:
 	// result: (SRA x ( CMOVZ <typ.UInt32> y (MOVWconst [-1]) (SGTUconst [32] y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSRA)
 		v.AddArg(x)
 		v0 := b.NewValue0(v.Pos, OpMIPSCMOVZ, typ.UInt32)
@@ -7844,16 +7744,13 @@ func rewriteValueMIPS_OpRsh32x64_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh32x8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh32x8 x y)
 	// cond:
 	// result: (SRA x ( CMOVZ <typ.UInt32> (ZeroExt8to32 y) (MOVWconst [-1]) (SGTUconst [32] (ZeroExt8to32 y))))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSRA)
 		v.AddArg(x)
 		v0 := b.NewValue0(v.Pos, OpMIPSCMOVZ, typ.UInt32)
@@ -7875,17 +7772,14 @@ func rewriteValueMIPS_OpRsh32x8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh8Ux16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh8Ux16 <t> x y)
 	// cond:
 	// result: (CMOVZ (SRL <t> (ZeroExt8to32 x) (ZeroExt16to32 y) ) (MOVWconst [0]) (SGTUconst [32] (ZeroExt16to32 y)))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSRL, t)
 		v1 := b.NewValue0(v.Pos, OpZeroExt8to32, typ.UInt32)
@@ -7909,17 +7803,14 @@ func rewriteValueMIPS_OpRsh8Ux16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh8Ux32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh8Ux32 <t> x y)
 	// cond:
 	// result: (CMOVZ (SRL <t> (ZeroExt8to32 x) y) (MOVWconst [0]) (SGTUconst [32] y))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSRL, t)
 		v1 := b.NewValue0(v.Pos, OpZeroExt8to32, typ.UInt32)
@@ -7939,9 +7830,7 @@ func rewriteValueMIPS_OpRsh8Ux32_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh8Ux64_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh8Ux64 x (Const64 [c]))
 	// cond: uint32(c) < 8
 	// result: (SRLconst (SLLconst <typ.UInt32> x [24]) [c+24])
@@ -7985,17 +7874,14 @@ func rewriteValueMIPS_OpRsh8Ux64_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh8Ux8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh8Ux8 <t> x y)
 	// cond:
 	// result: (CMOVZ (SRL <t> (ZeroExt8to32 x) (ZeroExt8to32 y) ) (MOVWconst [0]) (SGTUconst [32] (ZeroExt8to32 y)))
 	for {
 		t := v.Type
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSSRL, t)
 		v1 := b.NewValue0(v.Pos, OpZeroExt8to32, typ.UInt32)
@@ -8019,16 +7905,13 @@ func rewriteValueMIPS_OpRsh8Ux8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh8x16_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh8x16 x y)
 	// cond:
 	// result: (SRA (SignExt16to32 x) ( CMOVZ <typ.UInt32> (ZeroExt16to32 y) (MOVWconst [-1]) (SGTUconst [32] (ZeroExt16to32 y))))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSRA)
 		v0 := b.NewValue0(v.Pos, OpSignExt16to32, typ.Int32)
 		v0.AddArg(x)
@@ -8052,16 +7935,13 @@ func rewriteValueMIPS_OpRsh8x16_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh8x32_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh8x32 x y)
 	// cond:
 	// result: (SRA (SignExt16to32 x) ( CMOVZ <typ.UInt32> y (MOVWconst [-1]) (SGTUconst [32] y)))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSRA)
 		v0 := b.NewValue0(v.Pos, OpSignExt16to32, typ.Int32)
 		v0.AddArg(x)
@@ -8081,9 +7961,7 @@ func rewriteValueMIPS_OpRsh8x32_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh8x64_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh8x64 x (Const64 [c]))
 	// cond: uint32(c) < 8
 	// result: (SRAconst (SLLconst <typ.UInt32> x [24]) [c+24])
@@ -8132,16 +8010,13 @@ func rewriteValueMIPS_OpRsh8x64_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpRsh8x8_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Rsh8x8 x y)
 	// cond:
 	// result: (SRA (SignExt16to32 x) ( CMOVZ <typ.UInt32> (ZeroExt8to32 y) (MOVWconst [-1]) (SGTUconst [32] (ZeroExt8to32 y))))
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSRA)
 		v0 := b.NewValue0(v.Pos, OpSignExt16to32, typ.Int32)
 		v0.AddArg(x)
@@ -8165,9 +8040,7 @@ func rewriteValueMIPS_OpRsh8x8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpSelect0_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Select0 (Add32carry <t> x y))
 	// cond:
 	// result: (ADD <t.FieldType(0)> x y)
@@ -8177,9 +8050,8 @@ func rewriteValueMIPS_OpSelect0_0(v *Value) bool {
 			break
 		}
 		t := v_0.Type
-		_ = v_0.Args[1]
-		x := v_0.Args[0]
 		y := v_0.Args[1]
+		x := v_0.Args[0]
 		v.reset(OpMIPSADD)
 		v.Type = t.FieldType(0)
 		v.AddArg(x)
@@ -8195,9 +8067,8 @@ func rewriteValueMIPS_OpSelect0_0(v *Value) bool {
 			break
 		}
 		t := v_0.Type
-		_ = v_0.Args[1]
-		x := v_0.Args[0]
 		y := v_0.Args[1]
+		x := v_0.Args[0]
 		v.reset(OpMIPSSUB)
 		v.Type = t.FieldType(0)
 		v.AddArg(x)
@@ -8292,7 +8163,7 @@ func rewriteValueMIPS_OpSelect0_0(v *Value) bool {
 		if v_0.Op != OpMIPSMULTU {
 			break
 		}
-		_ = v_0.Args[1]
+		x := v_0.Args[1]
 		v_0_0 := v_0.Args[0]
 		if v_0_0.Op != OpMIPSMOVWconst {
 			break
@@ -8300,7 +8171,6 @@ func rewriteValueMIPS_OpSelect0_0(v *Value) bool {
 		if v_0_0.AuxInt != -1 {
 			break
 		}
-		x := v_0.Args[1]
 		v.reset(OpMIPSCMOVZ)
 		v0 := b.NewValue0(v.Pos, OpMIPSADDconst, x.Type)
 		v0.AuxInt = -1
@@ -8348,13 +8218,12 @@ func rewriteValueMIPS_OpSelect0_0(v *Value) bool {
 		if v_0.Op != OpMIPSMULTU {
 			break
 		}
-		_ = v_0.Args[1]
+		x := v_0.Args[1]
 		v_0_0 := v_0.Args[0]
 		if v_0_0.Op != OpMIPSMOVWconst {
 			break
 		}
 		c := v_0_0.AuxInt
-		x := v_0.Args[1]
 		if !(isPowerOfTwo(int64(uint32(c)))) {
 			break
 		}
@@ -8485,9 +8354,7 @@ func rewriteValueMIPS_OpSelect0_10(v *Value) bool {
 }
 func rewriteValueMIPS_OpSelect1_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Select1 (Add32carry <t> x y))
 	// cond:
 	// result: (SGTU <typ.Bool> x (ADD <t.FieldType(0)> x y))
@@ -8497,9 +8364,8 @@ func rewriteValueMIPS_OpSelect1_0(v *Value) bool {
 			break
 		}
 		t := v_0.Type
-		_ = v_0.Args[1]
-		x := v_0.Args[0]
 		y := v_0.Args[1]
+		x := v_0.Args[0]
 		v.reset(OpMIPSSGTU)
 		v.Type = typ.Bool
 		v.AddArg(x)
@@ -8518,9 +8384,8 @@ func rewriteValueMIPS_OpSelect1_0(v *Value) bool {
 			break
 		}
 		t := v_0.Type
-		_ = v_0.Args[1]
-		x := v_0.Args[0]
 		y := v_0.Args[1]
+		x := v_0.Args[0]
 		v.reset(OpMIPSSGTU)
 		v.Type = typ.Bool
 		v0 := b.NewValue0(v.Pos, OpMIPSSUB, t.FieldType(0))
@@ -8578,7 +8443,7 @@ func rewriteValueMIPS_OpSelect1_0(v *Value) bool {
 		if v_0.Op != OpMIPSMULTU {
 			break
 		}
-		_ = v_0.Args[1]
+		x := v_0.Args[1]
 		v_0_0 := v_0.Args[0]
 		if v_0_0.Op != OpMIPSMOVWconst {
 			break
@@ -8586,7 +8451,6 @@ func rewriteValueMIPS_OpSelect1_0(v *Value) bool {
 		if v_0_0.AuxInt != 1 {
 			break
 		}
-		x := v_0.Args[1]
 		v.reset(OpCopy)
 		v.Type = x.Type
 		v.AddArg(x)
@@ -8622,7 +8486,7 @@ func rewriteValueMIPS_OpSelect1_0(v *Value) bool {
 		if v_0.Op != OpMIPSMULTU {
 			break
 		}
-		_ = v_0.Args[1]
+		x := v_0.Args[1]
 		v_0_0 := v_0.Args[0]
 		if v_0_0.Op != OpMIPSMOVWconst {
 			break
@@ -8630,7 +8494,6 @@ func rewriteValueMIPS_OpSelect1_0(v *Value) bool {
 		if v_0_0.AuxInt != -1 {
 			break
 		}
-		x := v_0.Args[1]
 		v.reset(OpMIPSNEG)
 		v.Type = x.Type
 		v.AddArg(x)
@@ -8666,13 +8529,12 @@ func rewriteValueMIPS_OpSelect1_0(v *Value) bool {
 		if v_0.Op != OpMIPSMULTU {
 			break
 		}
-		_ = v_0.Args[1]
+		x := v_0.Args[1]
 		v_0_0 := v_0.Args[0]
 		if v_0_0.Op != OpMIPSMOVWconst {
 			break
 		}
 		c := v_0_0.AuxInt
-		x := v_0.Args[1]
 		if !(isPowerOfTwo(int64(uint32(c)))) {
 			break
 		}
@@ -8848,7 +8710,6 @@ func rewriteValueMIPS_OpSignmask_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpSlicemask_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Slicemask <t> x)
 	// cond:
 	// result: (SRAconst (NEG <t> x) [31])
@@ -8895,10 +8756,9 @@ func rewriteValueMIPS_OpStore_0(v *Value) bool {
 	// result: (MOVBstore ptr val mem)
 	for {
 		t := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(t.(*types.Type).Size() == 1) {
 			break
 		}
@@ -8913,10 +8773,9 @@ func rewriteValueMIPS_OpStore_0(v *Value) bool {
 	// result: (MOVHstore ptr val mem)
 	for {
 		t := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(t.(*types.Type).Size() == 2) {
 			break
 		}
@@ -8931,10 +8790,9 @@ func rewriteValueMIPS_OpStore_0(v *Value) bool {
 	// result: (MOVWstore ptr val mem)
 	for {
 		t := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(t.(*types.Type).Size() == 4 && !is32BitFloat(val.Type)) {
 			break
 		}
@@ -8949,10 +8807,9 @@ func rewriteValueMIPS_OpStore_0(v *Value) bool {
 	// result: (MOVFstore ptr val mem)
 	for {
 		t := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(t.(*types.Type).Size() == 4 && is32BitFloat(val.Type)) {
 			break
 		}
@@ -8967,10 +8824,9 @@ func rewriteValueMIPS_OpStore_0(v *Value) bool {
 	// result: (MOVDstore ptr val mem)
 	for {
 		t := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		ptr := v.Args[0]
 		val := v.Args[1]
-		mem := v.Args[2]
 		if !(t.(*types.Type).Size() == 8 && is64BitFloat(val.Type)) {
 			break
 		}
@@ -8987,9 +8843,8 @@ func rewriteValueMIPS_OpSub16_0(v *Value) bool {
 	// cond:
 	// result: (SUB x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSUB)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -9001,9 +8856,8 @@ func rewriteValueMIPS_OpSub32_0(v *Value) bool {
 	// cond:
 	// result: (SUB x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSUB)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -9015,9 +8869,8 @@ func rewriteValueMIPS_OpSub32F_0(v *Value) bool {
 	// cond:
 	// result: (SUBF x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSUBF)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -9026,16 +8879,14 @@ func rewriteValueMIPS_OpSub32F_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpSub32withcarry_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	// match: (Sub32withcarry <t> x y c)
 	// cond:
 	// result: (SUB (SUB <t> x y) c)
 	for {
 		t := v.Type
-		_ = v.Args[2]
+		c := v.Args[2]
 		x := v.Args[0]
 		y := v.Args[1]
-		c := v.Args[2]
 		v.reset(OpMIPSSUB)
 		v0 := b.NewValue0(v.Pos, OpMIPSSUB, t)
 		v0.AddArg(x)
@@ -9050,9 +8901,8 @@ func rewriteValueMIPS_OpSub64F_0(v *Value) bool {
 	// cond:
 	// result: (SUBD x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSUBD)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -9064,9 +8914,8 @@ func rewriteValueMIPS_OpSub8_0(v *Value) bool {
 	// cond:
 	// result: (SUB x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSUB)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -9078,9 +8927,8 @@ func rewriteValueMIPS_OpSubPtr_0(v *Value) bool {
 	// cond:
 	// result: (SUB x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSSUB)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -9129,10 +8977,9 @@ func rewriteValueMIPS_OpWB_0(v *Value) bool {
 	// result: (LoweredWB {fn} destptr srcptr mem)
 	for {
 		fn := v.Aux
-		_ = v.Args[2]
+		mem := v.Args[2]
 		destptr := v.Args[0]
 		srcptr := v.Args[1]
-		mem := v.Args[2]
 		v.reset(OpMIPSLoweredWB)
 		v.Aux = fn
 		v.AddArg(destptr)
@@ -9146,9 +8993,8 @@ func rewriteValueMIPS_OpXor16_0(v *Value) bool {
 	// cond:
 	// result: (XOR x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXOR)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -9160,9 +9006,8 @@ func rewriteValueMIPS_OpXor32_0(v *Value) bool {
 	// cond:
 	// result: (XOR x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXOR)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -9174,9 +9019,8 @@ func rewriteValueMIPS_OpXor8_0(v *Value) bool {
 	// cond:
 	// result: (XOR x y)
 	for {
-		_ = v.Args[1]
-		x := v.Args[0]
 		y := v.Args[1]
+		x := v.Args[0]
 		v.reset(OpMIPSXOR)
 		v.AddArg(x)
 		v.AddArg(y)
@@ -9185,9 +9029,7 @@ func rewriteValueMIPS_OpXor8_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpZero_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Zero [0] _ mem)
 	// cond:
 	// result: mem
@@ -9195,7 +9037,6 @@ func rewriteValueMIPS_OpZero_0(v *Value) bool {
 		if v.AuxInt != 0 {
 			break
 		}
-		_ = v.Args[1]
 		mem := v.Args[1]
 		v.reset(OpCopy)
 		v.Type = mem.Type
@@ -9209,9 +9050,8 @@ func rewriteValueMIPS_OpZero_0(v *Value) bool {
 		if v.AuxInt != 1 {
 			break
 		}
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		v.reset(OpMIPSMOVBstore)
 		v.AddArg(ptr)
 		v0 := b.NewValue0(v.Pos, OpMIPSMOVWconst, typ.UInt32)
@@ -9228,9 +9068,8 @@ func rewriteValueMIPS_OpZero_0(v *Value) bool {
 			break
 		}
 		t := v.Aux
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(t.(*types.Type).Alignment()%2 == 0) {
 			break
 		}
@@ -9249,9 +9088,8 @@ func rewriteValueMIPS_OpZero_0(v *Value) bool {
 		if v.AuxInt != 2 {
 			break
 		}
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		v.reset(OpMIPSMOVBstore)
 		v.AuxInt = 1
 		v.AddArg(ptr)
@@ -9276,9 +9114,8 @@ func rewriteValueMIPS_OpZero_0(v *Value) bool {
 			break
 		}
 		t := v.Aux
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(t.(*types.Type).Alignment()%4 == 0) {
 			break
 		}
@@ -9298,9 +9135,8 @@ func rewriteValueMIPS_OpZero_0(v *Value) bool {
 			break
 		}
 		t := v.Aux
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(t.(*types.Type).Alignment()%2 == 0) {
 			break
 		}
@@ -9327,9 +9163,8 @@ func rewriteValueMIPS_OpZero_0(v *Value) bool {
 		if v.AuxInt != 4 {
 			break
 		}
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		v.reset(OpMIPSMOVBstore)
 		v.AuxInt = 3
 		v.AddArg(ptr)
@@ -9367,9 +9202,8 @@ func rewriteValueMIPS_OpZero_0(v *Value) bool {
 		if v.AuxInt != 3 {
 			break
 		}
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		v.reset(OpMIPSMOVBstore)
 		v.AuxInt = 2
 		v.AddArg(ptr)
@@ -9401,9 +9235,8 @@ func rewriteValueMIPS_OpZero_0(v *Value) bool {
 			break
 		}
 		t := v.Aux
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(t.(*types.Type).Alignment()%2 == 0) {
 			break
 		}
@@ -9438,9 +9271,8 @@ func rewriteValueMIPS_OpZero_0(v *Value) bool {
 			break
 		}
 		t := v.Aux
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(t.(*types.Type).Alignment()%4 == 0) {
 			break
 		}
@@ -9464,11 +9296,8 @@ func rewriteValueMIPS_OpZero_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpZero_10(v *Value) bool {
 	b := v.Block
-	_ = b
 	config := b.Func.Config
-	_ = config
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Zero [12] {t} ptr mem)
 	// cond: t.(*types.Type).Alignment()%4 == 0
 	// result: (MOVWstore [8] ptr (MOVWconst [0]) (MOVWstore [4] ptr (MOVWconst [0]) (MOVWstore [0] ptr (MOVWconst [0]) mem)))
@@ -9477,9 +9306,8 @@ func rewriteValueMIPS_OpZero_10(v *Value) bool {
 			break
 		}
 		t := v.Aux
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(t.(*types.Type).Alignment()%4 == 0) {
 			break
 		}
@@ -9514,9 +9342,8 @@ func rewriteValueMIPS_OpZero_10(v *Value) bool {
 			break
 		}
 		t := v.Aux
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(t.(*types.Type).Alignment()%4 == 0) {
 			break
 		}
@@ -9556,9 +9383,8 @@ func rewriteValueMIPS_OpZero_10(v *Value) bool {
 	for {
 		s := v.AuxInt
 		t := v.Aux
-		_ = v.Args[1]
-		ptr := v.Args[0]
 		mem := v.Args[1]
+		ptr := v.Args[0]
 		if !(s > 16 || t.(*types.Type).Alignment()%4 != 0) {
 			break
 		}
@@ -9609,9 +9435,7 @@ func rewriteValueMIPS_OpZeroExt8to32_0(v *Value) bool {
 }
 func rewriteValueMIPS_OpZeromask_0(v *Value) bool {
 	b := v.Block
-	_ = b
 	typ := &b.Func.Config.Types
-	_ = typ
 	// match: (Zeromask x)
 	// cond:
 	// result: (NEG (SGTU x (MOVWconst [0])))
@@ -9629,21 +9453,16 @@ func rewriteValueMIPS_OpZeromask_0(v *Value) bool {
 }
 func rewriteBlockMIPS(b *Block) bool {
 	config := b.Func.Config
-	_ = config
-	fe := b.Func.fe
-	_ = fe
 	typ := &config.Types
 	_ = typ
+	v := b.Control
+	_ = v
 	switch b.Kind {
 	case BlockMIPSEQ:
 		// match: (EQ (FPFlagTrue cmp) yes no)
 		// cond:
 		// result: (FPF cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSFPFlagTrue {
-				break
-			}
+		for v.Op == OpMIPSFPFlagTrue {
 			cmp := v.Args[0]
 			b.Kind = BlockMIPSFPF
 			b.SetControl(cmp)
@@ -9653,11 +9472,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (EQ (FPFlagFalse cmp) yes no)
 		// cond:
 		// result: (FPT cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSFPFlagFalse {
-				break
-			}
+		for v.Op == OpMIPSFPFlagFalse {
 			cmp := v.Args[0]
 			b.Kind = BlockMIPSFPT
 			b.SetControl(cmp)
@@ -9667,11 +9482,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (EQ (XORconst [1] cmp:(SGT _ _)) yes no)
 		// cond:
 		// result: (NE cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSXORconst {
-				break
-			}
+		for v.Op == OpMIPSXORconst {
 			if v.AuxInt != 1 {
 				break
 			}
@@ -9688,11 +9499,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (EQ (XORconst [1] cmp:(SGTU _ _)) yes no)
 		// cond:
 		// result: (NE cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSXORconst {
-				break
-			}
+		for v.Op == OpMIPSXORconst {
 			if v.AuxInt != 1 {
 				break
 			}
@@ -9709,11 +9516,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (EQ (XORconst [1] cmp:(SGTconst _)) yes no)
 		// cond:
 		// result: (NE cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSXORconst {
-				break
-			}
+		for v.Op == OpMIPSXORconst {
 			if v.AuxInt != 1 {
 				break
 			}
@@ -9729,11 +9532,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (EQ (XORconst [1] cmp:(SGTUconst _)) yes no)
 		// cond:
 		// result: (NE cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSXORconst {
-				break
-			}
+		for v.Op == OpMIPSXORconst {
 			if v.AuxInt != 1 {
 				break
 			}
@@ -9749,11 +9548,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (EQ (XORconst [1] cmp:(SGTzero _)) yes no)
 		// cond:
 		// result: (NE cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSXORconst {
-				break
-			}
+		for v.Op == OpMIPSXORconst {
 			if v.AuxInt != 1 {
 				break
 			}
@@ -9769,11 +9564,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (EQ (XORconst [1] cmp:(SGTUzero _)) yes no)
 		// cond:
 		// result: (NE cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSXORconst {
-				break
-			}
+		for v.Op == OpMIPSXORconst {
 			if v.AuxInt != 1 {
 				break
 			}
@@ -9789,11 +9580,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (EQ (SGTUconst [1] x) yes no)
 		// cond:
 		// result: (NE x yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSSGTUconst {
-				break
-			}
+		for v.Op == OpMIPSSGTUconst {
 			if v.AuxInt != 1 {
 				break
 			}
@@ -9806,11 +9593,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (EQ (SGTUzero x) yes no)
 		// cond:
 		// result: (EQ x yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSSGTUzero {
-				break
-			}
+		for v.Op == OpMIPSSGTUzero {
 			x := v.Args[0]
 			b.Kind = BlockMIPSEQ
 			b.SetControl(x)
@@ -9820,11 +9603,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (EQ (SGTconst [0] x) yes no)
 		// cond:
 		// result: (GEZ x yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSSGTconst {
-				break
-			}
+		for v.Op == OpMIPSSGTconst {
 			if v.AuxInt != 0 {
 				break
 			}
@@ -9837,11 +9616,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (EQ (SGTzero x) yes no)
 		// cond:
 		// result: (LEZ x yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSSGTzero {
-				break
-			}
+		for v.Op == OpMIPSSGTzero {
 			x := v.Args[0]
 			b.Kind = BlockMIPSLEZ
 			b.SetControl(x)
@@ -9851,11 +9626,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (EQ (MOVWconst [0]) yes no)
 		// cond:
 		// result: (First nil yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSMOVWconst {
-				break
-			}
+		for v.Op == OpMIPSMOVWconst {
 			if v.AuxInt != 0 {
 				break
 			}
@@ -9867,11 +9638,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (EQ (MOVWconst [c]) yes no)
 		// cond: c != 0
 		// result: (First nil no yes)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSMOVWconst {
-				break
-			}
+		for v.Op == OpMIPSMOVWconst {
 			c := v.AuxInt
 			if !(c != 0) {
 				break
@@ -9886,11 +9653,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (GEZ (MOVWconst [c]) yes no)
 		// cond: int32(c) >= 0
 		// result: (First nil yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSMOVWconst {
-				break
-			}
+		for v.Op == OpMIPSMOVWconst {
 			c := v.AuxInt
 			if !(int32(c) >= 0) {
 				break
@@ -9903,11 +9666,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (GEZ (MOVWconst [c]) yes no)
 		// cond: int32(c) < 0
 		// result: (First nil no yes)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSMOVWconst {
-				break
-			}
+		for v.Op == OpMIPSMOVWconst {
 			c := v.AuxInt
 			if !(int32(c) < 0) {
 				break
@@ -9922,11 +9681,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (GTZ (MOVWconst [c]) yes no)
 		// cond: int32(c) > 0
 		// result: (First nil yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSMOVWconst {
-				break
-			}
+		for v.Op == OpMIPSMOVWconst {
 			c := v.AuxInt
 			if !(int32(c) > 0) {
 				break
@@ -9939,11 +9694,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (GTZ (MOVWconst [c]) yes no)
 		// cond: int32(c) <= 0
 		// result: (First nil no yes)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSMOVWconst {
-				break
-			}
+		for v.Op == OpMIPSMOVWconst {
 			c := v.AuxInt
 			if !(int32(c) <= 0) {
 				break
@@ -9959,8 +9710,6 @@ func rewriteBlockMIPS(b *Block) bool {
 		// cond:
 		// result: (NE cond yes no)
 		for {
-			v := b.Control
-			_ = v
 			cond := b.Control
 			b.Kind = BlockMIPSNE
 			b.SetControl(cond)
@@ -9971,11 +9720,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (LEZ (MOVWconst [c]) yes no)
 		// cond: int32(c) <= 0
 		// result: (First nil yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSMOVWconst {
-				break
-			}
+		for v.Op == OpMIPSMOVWconst {
 			c := v.AuxInt
 			if !(int32(c) <= 0) {
 				break
@@ -9988,11 +9733,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (LEZ (MOVWconst [c]) yes no)
 		// cond: int32(c) > 0
 		// result: (First nil no yes)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSMOVWconst {
-				break
-			}
+		for v.Op == OpMIPSMOVWconst {
 			c := v.AuxInt
 			if !(int32(c) > 0) {
 				break
@@ -10007,11 +9748,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (LTZ (MOVWconst [c]) yes no)
 		// cond: int32(c) < 0
 		// result: (First nil yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSMOVWconst {
-				break
-			}
+		for v.Op == OpMIPSMOVWconst {
 			c := v.AuxInt
 			if !(int32(c) < 0) {
 				break
@@ -10024,11 +9761,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (LTZ (MOVWconst [c]) yes no)
 		// cond: int32(c) >= 0
 		// result: (First nil no yes)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSMOVWconst {
-				break
-			}
+		for v.Op == OpMIPSMOVWconst {
 			c := v.AuxInt
 			if !(int32(c) >= 0) {
 				break
@@ -10043,11 +9776,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (NE (FPFlagTrue cmp) yes no)
 		// cond:
 		// result: (FPT cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSFPFlagTrue {
-				break
-			}
+		for v.Op == OpMIPSFPFlagTrue {
 			cmp := v.Args[0]
 			b.Kind = BlockMIPSFPT
 			b.SetControl(cmp)
@@ -10057,11 +9786,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (NE (FPFlagFalse cmp) yes no)
 		// cond:
 		// result: (FPF cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSFPFlagFalse {
-				break
-			}
+		for v.Op == OpMIPSFPFlagFalse {
 			cmp := v.Args[0]
 			b.Kind = BlockMIPSFPF
 			b.SetControl(cmp)
@@ -10071,11 +9796,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (NE (XORconst [1] cmp:(SGT _ _)) yes no)
 		// cond:
 		// result: (EQ cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSXORconst {
-				break
-			}
+		for v.Op == OpMIPSXORconst {
 			if v.AuxInt != 1 {
 				break
 			}
@@ -10092,11 +9813,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (NE (XORconst [1] cmp:(SGTU _ _)) yes no)
 		// cond:
 		// result: (EQ cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSXORconst {
-				break
-			}
+		for v.Op == OpMIPSXORconst {
 			if v.AuxInt != 1 {
 				break
 			}
@@ -10113,11 +9830,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (NE (XORconst [1] cmp:(SGTconst _)) yes no)
 		// cond:
 		// result: (EQ cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSXORconst {
-				break
-			}
+		for v.Op == OpMIPSXORconst {
 			if v.AuxInt != 1 {
 				break
 			}
@@ -10133,11 +9846,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (NE (XORconst [1] cmp:(SGTUconst _)) yes no)
 		// cond:
 		// result: (EQ cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSXORconst {
-				break
-			}
+		for v.Op == OpMIPSXORconst {
 			if v.AuxInt != 1 {
 				break
 			}
@@ -10153,11 +9862,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (NE (XORconst [1] cmp:(SGTzero _)) yes no)
 		// cond:
 		// result: (EQ cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSXORconst {
-				break
-			}
+		for v.Op == OpMIPSXORconst {
 			if v.AuxInt != 1 {
 				break
 			}
@@ -10173,11 +9878,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (NE (XORconst [1] cmp:(SGTUzero _)) yes no)
 		// cond:
 		// result: (EQ cmp yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSXORconst {
-				break
-			}
+		for v.Op == OpMIPSXORconst {
 			if v.AuxInt != 1 {
 				break
 			}
@@ -10193,11 +9894,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (NE (SGTUconst [1] x) yes no)
 		// cond:
 		// result: (EQ x yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSSGTUconst {
-				break
-			}
+		for v.Op == OpMIPSSGTUconst {
 			if v.AuxInt != 1 {
 				break
 			}
@@ -10210,11 +9907,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (NE (SGTUzero x) yes no)
 		// cond:
 		// result: (NE x yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSSGTUzero {
-				break
-			}
+		for v.Op == OpMIPSSGTUzero {
 			x := v.Args[0]
 			b.Kind = BlockMIPSNE
 			b.SetControl(x)
@@ -10224,11 +9917,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (NE (SGTconst [0] x) yes no)
 		// cond:
 		// result: (LTZ x yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSSGTconst {
-				break
-			}
+		for v.Op == OpMIPSSGTconst {
 			if v.AuxInt != 0 {
 				break
 			}
@@ -10241,11 +9930,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (NE (SGTzero x) yes no)
 		// cond:
 		// result: (GTZ x yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSSGTzero {
-				break
-			}
+		for v.Op == OpMIPSSGTzero {
 			x := v.Args[0]
 			b.Kind = BlockMIPSGTZ
 			b.SetControl(x)
@@ -10255,11 +9940,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (NE (MOVWconst [0]) yes no)
 		// cond:
 		// result: (First nil no yes)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSMOVWconst {
-				break
-			}
+		for v.Op == OpMIPSMOVWconst {
 			if v.AuxInt != 0 {
 				break
 			}
@@ -10272,11 +9953,7 @@ func rewriteBlockMIPS(b *Block) bool {
 		// match: (NE (MOVWconst [c]) yes no)
 		// cond: c != 0
 		// result: (First nil yes no)
-		for {
-			v := b.Control
-			if v.Op != OpMIPSMOVWconst {
-				break
-			}
+		for v.Op == OpMIPSMOVWconst {
 			c := v.AuxInt
 			if !(c != 0) {
 				break

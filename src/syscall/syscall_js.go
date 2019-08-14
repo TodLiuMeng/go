@@ -7,6 +7,7 @@
 package syscall
 
 import (
+	"internal/oserror"
 	"sync"
 	"unsafe"
 )
@@ -55,6 +56,18 @@ func (e Errno) Error() string {
 	return "errno " + itoa(int(e))
 }
 
+func (e Errno) Is(target error) bool {
+	switch target {
+	case oserror.ErrPermission:
+		return e == EACCES || e == EPERM
+	case oserror.ErrExist:
+		return e == EEXIST || e == ENOTEMPTY
+	case oserror.ErrNotExist:
+		return e == ENOENT
+	}
+	return false
+}
+
 func (e Errno) Temporary() bool {
 	return e == EINTR || e == EMFILE || e.Timeout()
 }
@@ -74,6 +87,7 @@ const (
 	SIGKILL
 	SIGTRAP
 	SIGQUIT
+	SIGTERM
 )
 
 func (s Signal) Signal() {}
@@ -103,13 +117,12 @@ const (
 	O_WRONLY = 1
 	O_RDWR   = 2
 
-	O_CREAT    = 0100
-	O_CREATE   = O_CREAT
-	O_TRUNC    = 01000
-	O_APPEND   = 02000
-	O_EXCL     = 0200
-	O_NONBLOCK = 04000
-	O_SYNC     = 010000
+	O_CREAT  = 0100
+	O_CREATE = O_CREAT
+	O_TRUNC  = 01000
+	O_APPEND = 02000
+	O_EXCL   = 0200
+	O_SYNC   = 010000
 
 	O_CLOEXEC = 0
 )
@@ -268,14 +281,45 @@ func Getwd() (wd string, err error) {
 	return string(buf[:n]), nil
 }
 
-func Getegid() int                      { return 1 }
-func Geteuid() int                      { return 1 }
-func Getgid() int                       { return 1 }
-func Getgroups() ([]int, error)         { return []int{1}, nil }
-func Getppid() int                      { return 2 }
-func Getpid() int                       { return 3 }
-func Gettimeofday(tv *Timeval) error    { return ENOSYS }
-func Getuid() int                       { return 1 }
+func Getuid() int {
+	return jsProcess.Call("getuid").Int()
+}
+
+func Getgid() int {
+	return jsProcess.Call("getgid").Int()
+}
+
+func Geteuid() int {
+	return jsProcess.Call("geteuid").Int()
+}
+
+func Getegid() int {
+	return jsProcess.Call("getegid").Int()
+}
+
+func Getgroups() ([]int, error) {
+	array := jsProcess.Call("getgroups")
+	groups := make([]int, array.Length())
+	for i := range groups {
+		groups[i] = array.Index(i).Int()
+	}
+	return groups, nil
+}
+
+func Getpid() int {
+	return jsProcess.Get("pid").Int()
+}
+
+func Getppid() int {
+	return jsProcess.Get("ppid").Int()
+}
+
+func Umask(mask int) (oldmask int) {
+	return jsProcess.Call("umask", mask).Int()
+}
+
+func Gettimeofday(tv *Timeval) error { return ENOSYS }
+
 func Kill(pid int, signum Signal) error { return ENOSYS }
 func Sendfile(outfd int, infd int, offset *int64, count int) (written int, err error) {
 	return 0, ENOSYS

@@ -15,10 +15,15 @@ import (
 
 	"cmd/compile/internal/syntax"
 	"cmd/compile/internal/types"
+	"cmd/internal/obj"
 	"cmd/internal/objabi"
 	"cmd/internal/src"
 )
 
+// parseFiles concurrently parses files into *syntax.File structures.
+// Each declaration in every *syntax.File is converted to a syntax tree
+// and its root represented by *Node is appended to xtop.
+// Returns the total count of parsed lines.
 func parseFiles(filenames []string) uint {
 	var noders []*noder
 	// Limit the number of simultaneously open files.
@@ -233,16 +238,39 @@ func (p *noder) node() {
 	types.Block = 1
 	imported_unsafe = false
 
-	p.lineno(p.file.PkgName)
+	p.setlineno(p.file.PkgName)
 	mkpackage(p.file.PkgName.Value)
 
 	xtop = append(xtop, p.decls(p.file.DeclList)...)
 
 	for _, n := range p.linknames {
-		if imported_unsafe {
-			lookup(n.local).Linkname = n.remote
-		} else {
+		if !imported_unsafe {
 			p.yyerrorpos(n.pos, "//go:linkname only allowed in Go files that import \"unsafe\"")
+			continue
+		}
+		s := lookup(n.local)
+		if n.remote != "" {
+			s.Linkname = n.remote
+		} else {
+			// Use the default object symbol name if the
+			// user didn't provide one.
+			if myimportpath == "" {
+				p.yyerrorpos(n.pos, "//go:linkname requires linkname argument or -p compiler flag")
+			} else {
+				s.Linkname = objabi.PathToPrefix(myimportpath) + "." + n.local
+			}
+		}
+	}
+
+	// The linker expects an ABI0 wrapper for all cgo-exported
+	// functions.
+	for _, prag := range p.pragcgobuf {
+		switch prag[0] {
+		case "cgo_export_static", "cgo_export_dynamic":
+			if symabiRefs == nil {
+				symabiRefs = make(map[string]obj.ABI)
+			}
+			symabiRefs[prag[1]] = obj.ABI0
 		}
 	}
 
@@ -255,7 +283,7 @@ func (p *noder) decls(decls []syntax.Decl) (l []*Node) {
 	var cs constState
 
 	for _, decl := range decls {
-		p.lineno(decl)
+		p.setlineno(decl)
 		switch decl := decl.(type) {
 		case *syntax.ImportDecl:
 			p.importDecl(decl)
@@ -331,7 +359,7 @@ func (p *noder) varDecl(decl *syntax.VarDecl) []*Node {
 		exprs = p.exprList(decl.Values)
 	}
 
-	p.lineno(decl)
+	p.setlineno(decl)
 	return variter(names, typ, exprs)
 }
 
@@ -413,8 +441,11 @@ func (p *noder) typeDecl(decl *syntax.TypeDecl) *Node {
 		param.Pragma = 0
 	}
 
-	return p.nod(decl, ODCLTYPE, n, nil)
-
+	nod := p.nod(decl, ODCLTYPE, n, nil)
+	if param.Alias && !langSupported(1, 9) {
+		yyerrorl(nod.Pos, "type aliases only supported as of -lang=go1.9")
+	}
+	return nod
 }
 
 func (p *noder) declNames(names []*syntax.Name) []*Node {
@@ -426,7 +457,9 @@ func (p *noder) declNames(names []*syntax.Name) []*Node {
 }
 
 func (p *noder) declName(name *syntax.Name) *Node {
-	return p.setlineno(name, dclname(p.name(name)))
+	n := dclname(p.name(name))
+	n.Pos = p.pos(name)
+	return n
 }
 
 func (p *noder) funcDecl(fun *syntax.FuncDecl) *Node {
@@ -452,7 +485,7 @@ func (p *noder) funcDecl(fun *syntax.FuncDecl) *Node {
 		name = nblank.Sym // filled in by typecheckfunc
 	}
 
-	f.Func.Nname = p.setlineno(fun.Name, newfuncname(name))
+	f.Func.Nname = newfuncnamel(p.pos(fun.Name), name)
 	f.Func.Nname.Name.Defn = f
 	f.Func.Nname.Name.Param.Ntype = t
 
@@ -475,7 +508,18 @@ func (p *noder) funcDecl(fun *syntax.FuncDecl) *Node {
 		}
 	} else {
 		if pure_go || strings.HasPrefix(f.funcname(), "init.") {
-			yyerrorl(f.Pos, "missing function body")
+			// Linknamed functions are allowed to have no body. Hopefully
+			// the linkname target has a body. See issue 23311.
+			isLinknamed := false
+			for _, n := range p.linknames {
+				if f.funcname() == n.local {
+					isLinknamed = true
+					break
+				}
+			}
+			if !isLinknamed {
+				yyerrorl(f.Pos, "missing function body")
+			}
 		}
 	}
 
@@ -495,7 +539,7 @@ func (p *noder) signature(recv *syntax.Field, typ *syntax.FuncType) *Node {
 func (p *noder) params(params []*syntax.Field, dddOk bool) []*Node {
 	var nodes []*Node
 	for i, param := range params {
-		p.lineno(param)
+		p.setlineno(param)
 		nodes = append(nodes, p.param(param, dddOk, i+1 == len(params)))
 	}
 	return nodes
@@ -513,16 +557,22 @@ func (p *noder) param(param *syntax.Field, dddOk, final bool) *Node {
 	// rewrite ...T parameter
 	if typ.Op == ODDD {
 		if !dddOk {
-			yyerror("cannot use ... in receiver or result parameter list")
+			// We mark these as syntax errors to get automatic elimination
+			// of multiple such errors per line (see yyerrorl in subr.go).
+			yyerror("syntax error: cannot use ... in receiver or result parameter list")
 		} else if !final {
-			yyerror("can only use ... with final parameter in list")
+			if param.Name == nil {
+				yyerror("syntax error: cannot use ... with non-final parameter")
+			} else {
+				p.yyerrorpos(param.Name.Pos(), "syntax error: cannot use ... with non-final parameter %s", param.Name.Value)
+			}
 		}
 		typ.Op = OTARRAY
 		typ.Right = typ.Left
 		typ.Left = nil
-		n.SetIsddd(true)
+		n.SetIsDDD(true)
 		if n.Left != nil {
-			n.Left.SetIsddd(true)
+			n.Left.SetIsDDD(true)
 		}
 	}
 
@@ -545,15 +595,14 @@ func (p *noder) exprs(exprs []syntax.Expr) []*Node {
 }
 
 func (p *noder) expr(expr syntax.Expr) *Node {
-	p.lineno(expr)
+	p.setlineno(expr)
 	switch expr := expr.(type) {
 	case nil, *syntax.BadExpr:
 		return nil
 	case *syntax.Name:
 		return p.mkname(expr)
 	case *syntax.BasicLit:
-		return p.setlineno(expr, nodlit(p.basicLit(expr)))
-
+		return nodlit(p.basicLit(expr))
 	case *syntax.CompositeLit:
 		n := p.nod(expr, OCOMPLIT, nil, nil)
 		if expr.Type != nil {
@@ -580,7 +629,9 @@ func (p *noder) expr(expr syntax.Expr) *Node {
 			obj.Name.SetUsed(true)
 			return oldname(restrictlookup(expr.Sel.Value, obj.Name.Pkg))
 		}
-		return p.setlineno(expr, nodSym(OXDOT, obj, p.name(expr.Sel)))
+		n := nodSym(OXDOT, obj, p.name(expr.Sel))
+		n.Pos = p.pos(expr) // lineno may have been changed by p.expr(expr.X)
+		return n
 	case *syntax.IndexExpr:
 		return p.nod(expr, OINDEX, p.expr(expr.X), p.expr(expr.Index))
 	case *syntax.SliceExpr:
@@ -609,7 +660,7 @@ func (p *noder) expr(expr syntax.Expr) *Node {
 				x = unparen(x) // TODO(mdempsky): Needed?
 				if x.Op == OCOMPLIT {
 					// Special case for &T{...}: turn into (*T){...}.
-					x.Right = p.nod(expr, OIND, x.Right, nil)
+					x.Right = p.nod(expr, ODEREF, x.Right, nil)
 					x.Right.SetImplicit(true)
 					return x
 				}
@@ -620,7 +671,7 @@ func (p *noder) expr(expr syntax.Expr) *Node {
 	case *syntax.CallExpr:
 		n := p.nod(expr, OCALL, p.expr(expr.Fun), nil)
 		n.List.Set(p.exprs(expr.ArgList))
-		n.SetIsddd(expr.HasDots)
+		n.SetIsDDD(expr.HasDots)
 		return n
 
 	case *syntax.ArrayType:
@@ -764,7 +815,7 @@ func (p *noder) chanDir(dir syntax.ChanDir) types.ChanDir {
 func (p *noder) structType(expr *syntax.StructType) *Node {
 	var l []*Node
 	for i, field := range expr.FieldList {
-		p.lineno(field)
+		p.setlineno(field)
 		var n *Node
 		if field.Name == nil {
 			n = p.embedded(field.Type)
@@ -777,7 +828,7 @@ func (p *noder) structType(expr *syntax.StructType) *Node {
 		l = append(l, n)
 	}
 
-	p.lineno(expr)
+	p.setlineno(expr)
 	n := p.nod(expr, OTSTRUCT, nil, nil)
 	n.List.Set(l)
 	return n
@@ -786,7 +837,7 @@ func (p *noder) structType(expr *syntax.StructType) *Node {
 func (p *noder) interfaceType(expr *syntax.InterfaceType) *Node {
 	var l []*Node
 	for _, method := range expr.MethodList {
-		p.lineno(method)
+		p.setlineno(method)
 		var n *Node
 		if method.Name == nil {
 			n = p.nodSym(method, ODCLFIELD, oldname(p.packname(method.Type)), nil)
@@ -815,13 +866,18 @@ func (p *noder) packname(expr syntax.Expr) *types.Sym {
 		return name
 	case *syntax.SelectorExpr:
 		name := p.name(expr.X.(*syntax.Name))
+		def := asNode(name.Def)
+		if def == nil {
+			yyerror("undefined: %v", name)
+			return name
+		}
 		var pkg *types.Pkg
-		if asNode(name.Def) == nil || asNode(name.Def).Op != OPACK {
+		if def.Op != OPACK {
 			yyerror("%v is not a package", name)
 			pkg = localpkg
 		} else {
-			asNode(name.Def).Name.SetUsed(true)
-			pkg = asNode(name.Def).Name.Pkg
+			def.Name.SetUsed(true)
+			pkg = def.Name.Pkg
 		}
 		return restrictlookup(expr.Sel.Value, pkg)
 	}
@@ -842,7 +898,7 @@ func (p *noder) embedded(typ syntax.Expr) *Node {
 	n.SetEmbedded(true)
 
 	if isStar {
-		n.Left = p.nod(op, OIND, n.Left, nil)
+		n.Left = p.nod(op, ODEREF, n.Left, nil)
 	}
 	return n
 }
@@ -870,7 +926,7 @@ func (p *noder) stmt(stmt syntax.Stmt) *Node {
 }
 
 func (p *noder) stmtFall(stmt syntax.Stmt, fallOK bool) *Node {
-	p.lineno(stmt)
+	p.setlineno(stmt)
 	switch stmt := stmt.(type) {
 	case *syntax.EmptyStmt:
 		return nil
@@ -932,7 +988,7 @@ func (p *noder) stmtFall(stmt syntax.Stmt, fallOK bool) *Node {
 		}
 		n := p.nod(stmt, op, nil, nil)
 		if stmt.Label != nil {
-			n.Left = p.newname(stmt.Label)
+			n.Sym = p.name(stmt.Label)
 		}
 		return n
 	case *syntax.CallStmt:
@@ -941,7 +997,7 @@ func (p *noder) stmtFall(stmt syntax.Stmt, fallOK bool) *Node {
 		case syntax.Defer:
 			op = ODEFER
 		case syntax.Go:
-			op = OPROC
+			op = OGO
 		default:
 			panic("unhandled CallStmt")
 		}
@@ -998,7 +1054,7 @@ func (p *noder) assignList(expr syntax.Expr, defn *Node, colas bool) []*Node {
 
 	newOrErr := false
 	for i, expr := range exprs {
-		p.lineno(expr)
+		p.setlineno(expr)
 		res[i] = nblank
 
 		name, ok := expr.(*syntax.Name)
@@ -1120,7 +1176,7 @@ func (p *noder) switchStmt(stmt *syntax.SwitchStmt) *Node {
 func (p *noder) caseClauses(clauses []*syntax.CaseClause, tswitch *Node, rbrace syntax.Pos) []*Node {
 	var nodes []*Node
 	for i, clause := range clauses {
-		p.lineno(clause)
+		p.setlineno(clause)
 		if i > 0 {
 			p.closeScope(clause.Pos())
 		}
@@ -1176,7 +1232,7 @@ func (p *noder) selectStmt(stmt *syntax.SelectStmt) *Node {
 func (p *noder) commClauses(clauses []*syntax.CommClause, rbrace syntax.Pos) []*Node {
 	var nodes []*Node
 	for i, clause := range clauses {
-		p.lineno(clause)
+		p.setlineno(clause)
 		if i > 0 {
 			p.closeScope(clause.Pos())
 		}
@@ -1196,7 +1252,7 @@ func (p *noder) commClauses(clauses []*syntax.CommClause, rbrace syntax.Pos) []*
 }
 
 func (p *noder) labeledStmt(label *syntax.LabeledStmt, fallOK bool) *Node {
-	lhs := p.nod(label, OLABEL, p.newname(label.Label), nil)
+	lhs := p.nodSym(label, OLABEL, nil, p.name(label.Label))
 
 	var ls *Node
 	if label.Stmt != nil { // TODO(mdempsky): Should always be present.
@@ -1217,13 +1273,13 @@ func (p *noder) labeledStmt(label *syntax.LabeledStmt, fallOK bool) *Node {
 
 var unOps = [...]Op{
 	syntax.Recv: ORECV,
-	syntax.Mul:  OIND,
+	syntax.Mul:  ODEREF,
 	syntax.And:  OADDR,
 
 	syntax.Not: ONOT,
-	syntax.Xor: OCOM,
+	syntax.Xor: OBITNOT,
 	syntax.Add: OPLUS,
-	syntax.Sub: OMINUS,
+	syntax.Sub: ONEG,
 }
 
 func (p *noder) unOp(op syntax.Operator) Op {
@@ -1265,6 +1321,35 @@ func (p *noder) binOp(op syntax.Operator) Op {
 	return binOps[op]
 }
 
+// checkLangCompat reports an error if the representation of a numeric
+// literal is not compatible with the current language version.
+func checkLangCompat(lit *syntax.BasicLit) {
+	s := lit.Value
+	if len(s) <= 2 || langSupported(1, 13) {
+		return
+	}
+	// len(s) > 2
+	if strings.Contains(s, "_") {
+		yyerror("underscores in numeric literals only supported as of -lang=go1.13")
+		return
+	}
+	if s[0] != '0' {
+		return
+	}
+	base := s[1]
+	if base == 'b' || base == 'B' {
+		yyerror("binary literals only supported as of -lang=go1.13")
+		return
+	}
+	if base == 'o' || base == 'O' {
+		yyerror("0o/0O-style octal literals only supported as of -lang=go1.13")
+		return
+	}
+	if lit.Kind != syntax.IntLit && (base == 'x' || base == 'X') {
+		yyerror("hexadecimal floating-point literals only supported as of -lang=go1.13")
+	}
+}
+
 func (p *noder) basicLit(lit *syntax.BasicLit) Val {
 	// TODO: Don't try to convert if we had syntax errors (conversions may fail).
 	//       Use dummy values so we can continue to compile. Eventually, use a
@@ -1272,17 +1357,20 @@ func (p *noder) basicLit(lit *syntax.BasicLit) Val {
 	//       we can continue type-checking w/o spurious follow-up errors.
 	switch s := lit.Value; lit.Kind {
 	case syntax.IntLit:
+		checkLangCompat(lit)
 		x := new(Mpint)
 		x.SetString(s)
 		return Val{U: x}
 
 	case syntax.FloatLit:
+		checkLangCompat(lit)
 		x := newMpflt()
 		x.SetString(s)
 		return Val{U: x}
 
 	case syntax.ImagLit:
-		x := new(Mpcplx)
+		checkLangCompat(lit)
+		x := newMpcmplx()
 		x.Imag.SetString(strings.TrimSuffix(s, "i"))
 		return Val{U: x}
 
@@ -1349,33 +1437,28 @@ func (p *noder) wrapname(n syntax.Node, x *Node) *Node {
 }
 
 func (p *noder) nod(orig syntax.Node, op Op, left, right *Node) *Node {
-	return p.setlineno(orig, nod(op, left, right))
+	return nodl(p.pos(orig), op, left, right)
 }
 
 func (p *noder) nodSym(orig syntax.Node, op Op, left *Node, sym *types.Sym) *Node {
-	return p.setlineno(orig, nodSym(op, left, sym))
+	n := nodSym(op, left, sym)
+	n.Pos = p.pos(orig)
+	return n
 }
 
-func (p *noder) setlineno(src_ syntax.Node, dst *Node) *Node {
-	pos := src_.Pos()
-	if !pos.IsKnown() {
-		// TODO(mdempsky): Shouldn't happen. Fix package syntax.
-		return dst
+func (p *noder) pos(n syntax.Node) src.XPos {
+	// TODO(gri): orig.Pos() should always be known - fix package syntax
+	xpos := lineno
+	if pos := n.Pos(); pos.IsKnown() {
+		xpos = p.makeXPos(pos)
 	}
-	dst.Pos = p.makeXPos(pos)
-	return dst
+	return xpos
 }
 
-func (p *noder) lineno(n syntax.Node) {
-	if n == nil {
-		return
+func (p *noder) setlineno(n syntax.Node) {
+	if n != nil {
+		lineno = p.pos(n)
 	}
-	pos := n.Pos()
-	if !pos.IsKnown() {
-		// TODO(mdempsky): Shouldn't happen. Fix package syntax.
-		return
-	}
-	lineno = p.makeXPos(pos)
 }
 
 // error is called concurrently if files are parsed concurrently.
@@ -1404,11 +1487,20 @@ func (p *noder) pragma(pos syntax.Pos, text string) syntax.Pragma {
 
 	case strings.HasPrefix(text, "go:linkname "):
 		f := strings.Fields(text)
-		if len(f) != 3 {
-			p.error(syntax.Error{Pos: pos, Msg: "usage: //go:linkname localname linkname"})
+		if !(2 <= len(f) && len(f) <= 3) {
+			p.error(syntax.Error{Pos: pos, Msg: "usage: //go:linkname localname [linkname]"})
 			break
 		}
-		p.linknames = append(p.linknames, linkname{pos, f[1], f[2]})
+		// The second argument is optional. If omitted, we use
+		// the default object symbol name for this and
+		// linkname only serves to mark this symbol as
+		// something that may be referenced via the object
+		// symbol name from another package.
+		var target string
+		if len(f) == 3 {
+			target = f[2]
+		}
+		p.linknames = append(p.linknames, linkname{pos, f[1], target})
 
 	case strings.HasPrefix(text, "go:cgo_import_dynamic "):
 		// This is permitted for general use because Solaris

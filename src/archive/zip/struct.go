@@ -81,9 +81,17 @@ const (
 // See the zip spec for details.
 type FileHeader struct {
 	// Name is the name of the file.
-	// It must be a relative path, not start with a drive letter (e.g. C:),
+	//
+	// It must be a relative path, not start with a drive letter (such as "C:"),
 	// and must use forward slashes instead of back slashes. A trailing slash
 	// indicates that this file is a directory and should have no data.
+	//
+	// When reading zip files, the Name field is populated from
+	// the zip file directly and is not validated for correctness.
+	// It is the caller's responsibility to sanitize it as
+	// appropriate, including canonicalizing slash directions,
+	// validating that paths are relative, and preventing path
+	// traversal through filenames ("../../../").
 	Name string
 
 	// Comment is any arbitrary user-defined string shorter than 64KiB.
@@ -146,10 +154,15 @@ func (fi headerFileInfo) Size() int64 {
 	}
 	return int64(fi.fh.UncompressedSize)
 }
-func (fi headerFileInfo) IsDir() bool        { return fi.Mode().IsDir() }
-func (fi headerFileInfo) ModTime() time.Time { return fi.fh.ModTime() }
-func (fi headerFileInfo) Mode() os.FileMode  { return fi.fh.Mode() }
-func (fi headerFileInfo) Sys() interface{}   { return fi.fh }
+func (fi headerFileInfo) IsDir() bool { return fi.Mode().IsDir() }
+func (fi headerFileInfo) ModTime() time.Time {
+	if fi.fh.Modified.IsZero() {
+		return fi.fh.ModTime()
+	}
+	return fi.fh.Modified.UTC()
+}
+func (fi headerFileInfo) Mode() os.FileMode { return fi.fh.Mode() }
+func (fi headerFileInfo) Sys() interface{}  { return fi.fh }
 
 // FileInfoHeader creates a partially-populated FileHeader from an
 // os.FileInfo.
@@ -295,8 +308,8 @@ func (h *FileHeader) SetMode(mode os.FileMode) {
 }
 
 // isZip64 reports whether the file size exceeds the 32 bit limit
-func (fh *FileHeader) isZip64() bool {
-	return fh.CompressedSize64 >= uint32max || fh.UncompressedSize64 >= uint32max
+func (h *FileHeader) isZip64() bool {
+	return h.CompressedSize64 >= uint32max || h.UncompressedSize64 >= uint32max
 }
 
 func msdosModeToFileMode(m uint32) (mode os.FileMode) {

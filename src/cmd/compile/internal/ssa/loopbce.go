@@ -1,6 +1,13 @@
+// Copyright 2018 The Go Authors. All rights reserved.
+// Use of this source code is governed by a BSD-style
+// license that can be found in the LICENSE file.
+
 package ssa
 
-import "fmt"
+import (
+	"fmt"
+	"math"
+)
 
 type indVarFlags uint8
 
@@ -11,15 +18,15 @@ const (
 
 type indVar struct {
 	ind   *Value // induction variable
-	inc   *Value // increment, a constant
-	nxt   *Value // ind+inc variable
 	min   *Value // minimum value, inclusive/exclusive depends on flags
 	max   *Value // maximum value, inclusive/exclusive depends on flags
 	entry *Block // entry block in the loop.
 	flags indVarFlags
-	// Invariants: for all blocks dominated by entry:
-	//	min <= ind < max
-	//	min <= nxt <= max
+	// Invariant: for all blocks strictly dominated by entry:
+	//	min <= ind <  max    [if flags == 0]
+	//	min <  ind <  max    [if flags == indVarMinExc]
+	//	min <= ind <= max    [if flags == indVarMaxInc]
+	//	min <  ind <= max    [if flags == indVarMinExc|indVarMaxInc]
 }
 
 // findIndVar finds induction variables in a function.
@@ -45,7 +52,6 @@ func findIndVar(f *Func) []indVar {
 	var iv []indVar
 	sdom := f.sdom()
 
-nextb:
 	for _, b := range f.Blocks {
 		if b.Kind != BlockIf || len(b.Preds) != 2 {
 			continue
@@ -53,30 +59,30 @@ nextb:
 
 		var flags indVarFlags
 		var ind, max *Value // induction, and maximum
-		entry := -1         // which successor of b enters the loop
 
 		// Check thet the control if it either ind </<= max or max >/>= ind.
 		// TODO: Handle 32-bit comparisons.
+		// TODO: Handle unsigned comparisons?
 		switch b.Control.Op {
 		case OpLeq64:
 			flags |= indVarMaxInc
 			fallthrough
 		case OpLess64:
-			entry = 0
 			ind, max = b.Control.Args[0], b.Control.Args[1]
 		case OpGeq64:
 			flags |= indVarMaxInc
 			fallthrough
 		case OpGreater64:
-			entry = 0
 			ind, max = b.Control.Args[1], b.Control.Args[0]
 		default:
-			continue nextb
+			continue
 		}
 
 		// See if the arguments are reversed (i < len() <=> len() > i)
+		less := true
 		if max.Op == OpPhi {
 			ind, max = max, ind
+			less = false
 		}
 
 		// Check that the induction variable is a phi that depends on itself.
@@ -104,22 +110,35 @@ nextb:
 			panic("unreachable") // one of the cases must be true from the above.
 		}
 
-		// Expect the increment to be a constant.
+		// Expect the increment to be a nonzero constant.
 		if inc.Op != OpConst64 {
+			continue
+		}
+		step := inc.AuxInt
+		if step == 0 {
+			continue
+		}
+
+		// Increment sign must match comparison direction.
+		// When incrementing, the termination comparison must be ind </<= max.
+		// When decrementing, the termination comparison must be ind >/>= max.
+		// See issue 26116.
+		if step > 0 && !less {
+			continue
+		}
+		if step < 0 && less {
 			continue
 		}
 
 		// If the increment is negative, swap min/max and their flags
-		if inc.AuxInt <= 0 {
+		if step < 0 {
 			min, max = max, min
 			oldf := flags
-			flags = 0
+			flags = indVarMaxInc
 			if oldf&indVarMaxInc == 0 {
 				flags |= indVarMinExc
 			}
-			if oldf&indVarMinExc == 0 {
-				flags |= indVarMaxInc
-			}
+			step = -step
 		}
 
 		// Up to now we extracted the induction variable (ind),
@@ -136,45 +155,129 @@ nextb:
 		// as an induction variable.
 
 		// First condition: loop entry has a single predecessor, which
-		// is the header block.  This implies that b.Succs[entry] is
+		// is the header block.  This implies that b.Succs[0] is
 		// reached iff ind < max.
-		if len(b.Succs[entry].b.Preds) != 1 {
-			// b.Succs[1-entry] must exit the loop.
+		if len(b.Succs[0].b.Preds) != 1 {
+			// b.Succs[1] must exit the loop.
 			continue
 		}
 
-		// Second condition: b.Succs[entry] dominates nxt so that
+		// Second condition: b.Succs[0] dominates nxt so that
 		// nxt is computed when inc < max, meaning nxt <= max.
-		if !sdom.isAncestorEq(b.Succs[entry].b, nxt.Block) {
+		if !sdom.isAncestorEq(b.Succs[0].b, nxt.Block) {
 			// inc+ind can only be reached through the branch that enters the loop.
 			continue
 		}
 
-		// We can only guarantee that the loops runs within limits of induction variable
-		// if the increment is ±1 or when the limits are constants.
-		if inc.AuxInt != 1 && inc.AuxInt != -1 {
+		// We can only guarantee that the loop runs within limits of induction variable
+		// if (one of)
+		// (1) the increment is ±1
+		// (2) the limits are constants
+		// (3) loop is of the form k0 upto Known_not_negative-k inclusive, step <= k
+		// (4) loop is of the form k0 upto Known_not_negative-k exclusive, step <= k+1
+		// (5) loop is of the form Known_not_negative downto k0, minint+step < k0
+		if step > 1 {
 			ok := false
 			if min.Op == OpConst64 && max.Op == OpConst64 {
-				if max.AuxInt > min.AuxInt && max.AuxInt%inc.AuxInt == min.AuxInt%inc.AuxInt { // handle overflow
+				if max.AuxInt > min.AuxInt && max.AuxInt%step == min.AuxInt%step { // handle overflow
 					ok = true
 				}
 			}
+			// Handle induction variables of these forms.
+			// KNN is known-not-negative.
+			// SIGNED ARITHMETIC ONLY. (see switch on b.Control.Op above)
+			// Possibilitis for KNN are len and cap; perhaps we can infer others.
+			// for i := 0; i <= KNN-k    ; i += k
+			// for i := 0; i <  KNN-(k-1); i += k
+			// Also handle decreasing.
+
+			// "Proof" copied from https://go-review.googlesource.com/c/go/+/104041/10/src/cmd/compile/internal/ssa/loopbce.go#164
+			//
+			//	In the case of
+			//	// PC is Positive Constant
+			//	L := len(A)-PC
+			//	for i := 0; i < L; i = i+PC
+			//
+			//	we know:
+			//
+			//	0 + PC does not over/underflow.
+			//	len(A)-PC does not over/underflow
+			//	maximum value for L is MaxInt-PC
+			//	i < L <= MaxInt-PC means i + PC < MaxInt hence no overflow.
+
+			// To match in SSA:
+			// if  (a) min.Op == OpConst64(k0)
+			// and (b) k0 >= MININT + step
+			// and (c) max.Op == OpSubtract(Op{StringLen,SliceLen,SliceCap}, k)
+			// or  (c) max.Op == OpAdd(Op{StringLen,SliceLen,SliceCap}, -k)
+			// or  (c) max.Op == Op{StringLen,SliceLen,SliceCap}
+			// and (d) if upto loop, require indVarMaxInc && step <= k or !indVarMaxInc && step-1 <= k
+
+			if min.Op == OpConst64 && min.AuxInt >= step+math.MinInt64 {
+				knn := max
+				k := int64(0)
+				var kArg *Value
+
+				switch max.Op {
+				case OpSub64:
+					knn = max.Args[0]
+					kArg = max.Args[1]
+
+				case OpAdd64:
+					knn = max.Args[0]
+					kArg = max.Args[1]
+					if knn.Op == OpConst64 {
+						knn, kArg = kArg, knn
+					}
+				}
+				switch knn.Op {
+				case OpSliceLen, OpStringLen, OpSliceCap:
+				default:
+					knn = nil
+				}
+
+				if kArg != nil && kArg.Op == OpConst64 {
+					k = kArg.AuxInt
+					if max.Op == OpAdd64 {
+						k = -k
+					}
+				}
+				if k >= 0 && knn != nil {
+					if inc.AuxInt > 0 { // increasing iteration
+						// The concern for the relation between step and k is to ensure that iv never exceeds knn
+						// i.e., iv < knn-(K-1) ==> iv + K <= knn; iv <= knn-K ==> iv +K < knn
+						if step <= k || flags&indVarMaxInc == 0 && step-1 == k {
+							ok = true
+						}
+					} else { // decreasing iteration
+						// Will be decrementing from max towards min; max is knn-k; will only attempt decrement if
+						// knn-k >[=] min; underflow is only a concern if min-step is not smaller than min.
+						// This all assumes signed integer arithmetic
+						// This is already assured by the test above: min.AuxInt >= step+math.MinInt64
+						ok = true
+					}
+				}
+			}
+
+			// TODO: other unrolling idioms
+			// for i := 0; i < KNN - KNN % k ; i += k
+			// for i := 0; i < KNN&^(k-1) ; i += k // k a power of 2
+			// for i := 0; i < KNN&(-k) ; i += k // k a power of 2
+
 			if !ok {
 				continue
 			}
 		}
 
 		if f.pass.debug >= 1 {
-			printIndVar(b, ind, min, max, inc.AuxInt, flags)
+			printIndVar(b, ind, min, max, step, flags)
 		}
 
 		iv = append(iv, indVar{
 			ind:   ind,
-			inc:   inc,
-			nxt:   nxt,
 			min:   min,
 			max:   max,
-			entry: b.Succs[entry].b,
+			entry: b.Succs[0].b,
 			flags: flags,
 		})
 		b.Logf("found induction variable %v (inc = %v, min = %v, max = %v)\n", ind, inc, min, max)

@@ -26,7 +26,11 @@ type context struct {
 }
 
 func (c context) String() string {
-	return fmt.Sprintf("{%v %v %v %v %v %v %v}", c.state, c.delim, c.urlPart, c.jsCtx, c.attr, c.element, c.err)
+	var err error
+	if c.err != nil {
+		err = c.err
+	}
+	return fmt.Sprintf("{%v %v %v %v %v %v %v}", c.state, c.delim, c.urlPart, c.jsCtx, c.attr, c.element, err)
 }
 
 // eq reports whether two contexts are equal.
@@ -48,19 +52,19 @@ func (c context) mangle(templateName string) string {
 		return templateName
 	}
 	s := templateName + "$htmltemplate_" + c.state.String()
-	if c.delim != 0 {
+	if c.delim != delimNone {
 		s += "_" + c.delim.String()
 	}
-	if c.urlPart != 0 {
+	if c.urlPart != urlPartNone {
 		s += "_" + c.urlPart.String()
 	}
-	if c.jsCtx != 0 {
+	if c.jsCtx != jsCtxRegexp {
 		s += "_" + c.jsCtx.String()
 	}
-	if c.attr != 0 {
+	if c.attr != attrNone {
 		s += "_" + c.attr.String()
 	}
-	if c.element != 0 {
+	if c.element != elementNone {
 		s += "_" + c.element.String()
 	}
 	return s

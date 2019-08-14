@@ -35,8 +35,6 @@ const (
 // Don't sleep longer than ns; ns < 0 means forever.
 //go:nosplit
 func futexsleep(addr *uint32, val uint32, ns int64) {
-	var ts timespec
-
 	// Some Linux kernels have a bug where futex of
 	// FUTEX_WAIT returns an internal error code
 	// as an errno. Libpthread ignores the return value
@@ -47,19 +45,8 @@ func futexsleep(addr *uint32, val uint32, ns int64) {
 		return
 	}
 
-	// It's difficult to live within the no-split stack limits here.
-	// On ARM and 386, a 64-bit divide invokes a general software routine
-	// that needs more stack than we can afford. So we use timediv instead.
-	// But on real 64-bit systems, where words are larger but the stack limit
-	// is not, even timediv is too heavy, and we really need to use just an
-	// ordinary machine instruction.
-	if sys.PtrSize == 8 {
-		ts.set_sec(ns / 1000000000)
-		ts.set_nsec(int32(ns % 1000000000))
-	} else {
-		ts.tv_nsec = 0
-		ts.set_sec(int64(timediv(ns, 1000000000, (*int32)(unsafe.Pointer(&ts.tv_nsec)))))
-	}
+	var ts timespec
+	ts.setNsec(ns)
 	futex(unsafe.Pointer(addr), _FUTEX_WAIT_PRIVATE, val, unsafe.Pointer(&ts), nil, 0)
 }
 
@@ -274,8 +261,34 @@ func sysauxv(auxv []uintptr) int {
 	return i / 2
 }
 
+var sysTHPSizePath = []byte("/sys/kernel/mm/transparent_hugepage/hpage_pmd_size\x00")
+
+func getHugePageSize() uintptr {
+	var numbuf [20]byte
+	fd := open(&sysTHPSizePath[0], 0 /* O_RDONLY */, 0)
+	if fd < 0 {
+		return 0
+	}
+	n := read(fd, noescape(unsafe.Pointer(&numbuf[0])), int32(len(numbuf)))
+	closefd(fd)
+	if n <= 0 {
+		return 0
+	}
+	l := n - 1 // remove trailing newline
+	v, ok := atoi(slicebytetostringtmp(numbuf[:l]))
+	if !ok || v < 0 {
+		v = 0
+	}
+	if v&(v-1) != 0 {
+		// v is not a power of 2
+		return 0
+	}
+	return uintptr(v)
+}
+
 func osinit() {
 	ncpu = getproccount()
+	physHugePageSize = getHugePageSize()
 }
 
 var urandom_dev = []byte("/dev/urandom\x00")
@@ -408,6 +421,7 @@ func setSignalstackSP(s *stackt, sp uintptr) {
 	*(*uintptr)(unsafe.Pointer(&s.ss_sp)) = sp
 }
 
+//go:nosplit
 func (c *sigctxt) fixsigcode(sig uint32) {
 }
 
@@ -415,9 +429,18 @@ func (c *sigctxt) fixsigcode(sig uint32) {
 //go:nosplit
 func sysSigaction(sig uint32, new, old *sigactiont) {
 	if rt_sigaction(uintptr(sig), new, old, unsafe.Sizeof(sigactiont{}.sa_mask)) != 0 {
-		// Workaround for bug in Qemu user mode emulation. (qemu
-		// rejects rt_sigaction of signal 64, SIGRTMAX).
-		if sig != 64 {
+		// Workaround for bugs in QEMU user mode emulation.
+		//
+		// QEMU turns calls to the sigaction system call into
+		// calls to the C library sigaction call; the C
+		// library call rejects attempts to call sigaction for
+		// SIGCANCEL (32) or SIGSETXID (33).
+		//
+		// QEMU rejects calling sigaction on SIGRTMAX (64).
+		//
+		// Just ignore the error in these case. There isn't
+		// anything we can do about it anyhow.
+		if sig != 32 && sig != 33 && sig != 64 {
 			// Use system stack to avoid split stack overflow on ppc64/ppc64le.
 			systemstack(func() {
 				throw("sigaction failed")
